@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Tap to Earn MGL</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
+
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -40,24 +40,19 @@
     }
 
     button {
-      padding: 35px 50px;
-      font-size: 1.5rem;
+      padding: 20px 40px;
+      font-size: 1.2rem;
       background: #00cc99;
       border: none;
       border-radius: 65px;
       color: white;
-      margin-top: 30px;
+      margin: 15px 10px;
       cursor: pointer;
       box-shadow: 0 0 15px #00cc99, 0 0 30px #00cc99;
       transition: all 0.2s ease;
       animation: pop 1.5s infinite ease-in-out;
       outline: none !important;
       -webkit-tap-highlight-color: transparent;
-    }
-
-    button:focus,
-    button:focus-visible {
-      outline: none !important;
     }
 
     button:active {
@@ -83,20 +78,33 @@
       font-size: 1rem;
     }
 
-    #leaderboard {
-      margin-top: 40px;
-      background: rgba(255,255,255,0.05);
-      padding: 20px;
-      border-radius: 12px;
+    /* Leaderboard modal */
+    #leaderboardModal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      z-index: 999;
+      padding: 40px 20px;
+      overflow-y: auto;
     }
 
-    #leaderboard h2 {
-      margin-bottom: 10px;
+    #leaderboardModal h2 {
+      margin-bottom: 20px;
     }
 
     .player {
       margin: 6px 0;
       font-size: 1rem;
+    }
+
+    #closeBtn {
+      background: red;
+      margin-top: 20px;
     }
   </style>
 </head>
@@ -105,13 +113,19 @@
   <p>YOUR EARNED TON: <span id="score">0</span></p>
   <p id="energy">Energy: 🔋 0/10</p>
   <div id="msg"></div>
-  <button id="tapButton" onclick="increaseScore()">TAP!</button>
 
-  <!-- Leaderboard -->
-  <div id="leaderboard">
+  <button onclick="increaseScore(); playPop();">TAP!</button>
+  <button onclick="toggleLeaderboard(); playPop();">🏆 Show Leaderboard</button>
+
+  <!-- Leaderboard Modal -->
+  <div id="leaderboardModal">
     <h2>🏆 Leaderboard</h2>
     <div id="players">Loading...</div>
+    <button id="closeBtn" onclick="toggleLeaderboard(); playPop();">Close</button>
   </div>
+
+  <!-- Sound effect -->
+  <audio id="popSound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3" preload="auto"></audio>
 
   <script>
     const tg = window.Telegram.WebApp;
@@ -119,7 +133,7 @@
     const user = tg.initDataUnsafe.user;
     const userId = user?.id || "guest";
     const name = user?.first_name || "DEAR USER!";
-    const username = user?.username || "anon";
+    const username = user?.username || user?.first_name || "guest";
     document.getElementById("name").innerText = name;
 
     const firebaseConfig = {
@@ -153,7 +167,6 @@
         score = data.score || 0;
         energy = data.energy ?? maxEnergy;
         lastEnergyAt = new Date(data.lastEnergyAt || now).getTime();
-
         const secondsPassed = Math.floor((now - lastEnergyAt) / 1000);
         const recovered = Math.floor(secondsPassed / 5);
         energy = Math.min(maxEnergy, energy + recovered);
@@ -199,13 +212,11 @@
       energyEl.innerText = `Energy: 🔋 ${energy}/${maxEnergy}`;
     }
 
-    // Refill energy every 5 sec
     setInterval(() => {
       if (energy < maxEnergy) {
         energy += 1;
         lastEnergyAt = Date.now();
         updateEnergyDisplay();
-
         userRef.update({
           energy,
           lastEnergyAt: new Date().toISOString()
@@ -213,28 +224,31 @@
       }
     }, 5000);
 
-    // Leaderboard татах
     function loadLeaderboard() {
       db.ref("users").once("value").then(snapshot => {
         const players = [];
         snapshot.forEach(child => {
           const data = child.val();
           players.push({
-            username: data.username || "anon",
+            username: data.username || "guest",
             score: data.score || 0
           });
         });
-
-        // Оноогоор буулгаж эрэмбэлнэ
         players.sort((a, b) => b.score - a.score);
-
-        // Топ 10-г харуулна
-        const list = players.slice(0, 10).map((p, i) => {
-          return `<div class="player">#${i + 1} - @${p.username}: ${p.score}</div>`;
-        }).join("");
-
+        const list = players.slice(0, 10).map((p, i) => `<div class="player">#${i + 1} - @${p.username}: ${p.score}</div>`).join("");
         document.getElementById("players").innerHTML = list || "No players yet";
       });
+    }
+
+    function toggleLeaderboard() {
+      const modal = document.getElementById("leaderboardModal");
+      modal.style.display = modal.style.display === "none" ? "block" : "none";
+    }
+
+    function playPop() {
+      const snd = document.getElementById("popSound");
+      snd.currentTime = 0;
+      snd.play();
     }
   </script>
 </body>
