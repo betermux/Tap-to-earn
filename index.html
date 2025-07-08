@@ -5,11 +5,11 @@
   <title>Tap to Earn MGL</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Firebase Modular JS SDK (ESM биш хувилбар) -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
-  <!-- Telegram WebApp JS -->
+  <!-- Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
@@ -18,26 +18,52 @@
       background: #111;
       color: white;
       text-align: center;
-      padding: 40px;
+      padding: 100px;
     }
+
     h1 {
       font-size: 2rem;
     }
+
     button {
-      padding: 15px 25px;
-      font-size: 1.2rem;
+      padding: 35px 50px;
+      font-size: 1.5rem;
       background: #00cc99;
       border: none;
-      border-radius: 10px;
+      border-radius: 65px;
       color: white;
-      margin-top: 20px;
+      margin-top: 30px;
+      cursor: pointer;
+      box-shadow: 0 0 15px #00cc99, 0 0 30px #00cc99;
+      transition: all 0.2s ease;
+      animation: pop 1.5s infinite ease-in-out;
+    }
+
+    button:hover {
+      background: #00e6b8;
+      box-shadow: 0 0 20px #00e6b8, 0 0 40px #00e6b8;
+    }
+
+    button:active {
+      transform: scale(0.95);
+      background: #009977;
+      box-shadow: 0 0 10px #00775c;
+    }
+
+    @keyframes pop {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
     }
   </style>
 </head>
 <body>
-  <h1>Сайн байна уу, <span id="name">?</span>!</h1>
-  <p>Таны оноо: <span id="score">0</span></p>
-  <button onclick="increaseScore()">Дарж оноо нэмэх</button>
+  <h1>EARN FREE TON COIN NOW, <span id="name">?</span>!</h1>
+  <p>YOUR EARNED TON: <span id="score">0</span></p>
+  <button onclick="increaseScore()">TAP!</button>
 
   <script>
     // Telegram init
@@ -45,7 +71,7 @@
     tg.expand();
     const user = tg.initDataUnsafe.user;
     const userId = user?.id || "guest";
-    const name = user?.first_name || "Хэрэглэгч";
+    const name = user?.first_name || "DEAR USER!";
     document.getElementById("name").innerText = name;
 
     // Firebase config
