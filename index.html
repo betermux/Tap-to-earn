@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Tap to Earn</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", sans-serif;
+        background: linear-gradient(to bottom, #dff1ff, #ffffff);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        color: #333;
+      }
+
+      h1 {
+        font-size: 24px;
+        margin-bottom: 10px;
+      }
+
+      #user {
+        color: #0077cc;
+      }
+
+      #tap {
+        background: #0088cc;
+        color: white;
+        font-size: 22px;
+        padding: 18px 36px;
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        transition: transform 0.2s ease, background 0.2s;
+      }
+
+      #tap:hover {
+        background: #006faa;
+        transform: scale(1.05);
+      }
+
+      #tap:active {
+        transform: scale(0.98);
+      }
+
+      #count {
+        font-size: 20px;
+        margin-top: 20px;
+        font-weight: bold;
+      }
+
+      .bounce {
+        animation: bounce 0.3s;
+      }
+
+      @keyframes bounce {
+        0%   { transform: scale(1); }
+        50%  { transform: scale(1.15); }
+        100% { transform: scale(1); }
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Сайн уу, <span id="user">...</span>!</h1>
+    <button id="tap">👆 Дарж оноо цуглуул</button>
+    <p id="count">Оноо: 0</p>
+
+    <script>
+      const tg = window.Telegram.WebApp;
+      tg.expand();
+
+      const userSpan = document.getElementById("user");
+      const button = document.getElementById("tap");
+      const counter = document.getElementById("count");
+
+      let taps = 0;
+
+      if (tg.initDataUnsafe?.user?.first_name) {
+        userSpan.textContent = tg.initDataUnsafe.user.first_name;
+      } else {
+        userSpan.textContent = "Зочин";
+      }
+
+      button.addEventListener("click", () => {
+        taps++;
+        counter.textContent = "Оноо: " + taps;
+
+        // Хөдөлгөөн
+        button.classList.add("bounce");
+        setTimeout(() => button.classList.remove("bounce"), 300);
+
+        // Telegram vibration
+        if (tg.HapticFeedback) {
+          tg.HapticFeedback.impactOccurred("light");
+        }
+      });
+    </script>
+  </body>
+</html>
