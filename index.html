@@ -13,7 +13,7 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
-    /* 🔮 Animated Gradient Background */
+    /* 🔮 Background animation */
     body {
       font-family: sans-serif;
       color: white;
@@ -50,20 +50,19 @@
       color: white;
       margin-top: 30px;
       cursor: pointer;
+
       box-shadow: 0 0 15px #00cc99, 0 0 30px #00cc99;
       transition: all 0.2s ease;
       animation: pop 1.5s infinite ease-in-out;
-      outline: none;
+
+      outline: none !important;
+      -webkit-tap-highlight-color: transparent;
     }
 
-button:focus,
-button:focus-visible {
-  outline: none;
-  box-shadow: 0 0 15px #00cc99, 0 0 30px #00cc99; /* hover шиг glow хадгална */
-}
-    button:hover {
-      background: #00e6b8;
-      box-shadow: 0 0 20px #00e6b8, 0 0 40px #00e6b8;
+    button:focus,
+    button:focus-visible {
+      outline: none !important;
+      box-shadow: 0 0 15px #00cc99, 0 0 30px #00cc99;
     }
 
     button:active {
@@ -85,7 +84,7 @@ button:focus-visible {
 <body>
   <h1>EARN FREE TON COIN NOW, <span id="name">?</span>!</h1>
   <p>YOUR EARNED TON: <span id="score">0</span></p>
-  <button onclick="increaseScore()">TAP!</button>
+  <button id="tapButton" onclick="increaseScore()">TAP!</button>
 
   <script>
     // Telegram init
@@ -135,6 +134,9 @@ button:focus-visible {
       score += 1;
       scoreEl.innerText = score;
       userRef.update({ score });
+
+      // Фокус арилгах — Android WebView-д зориулсан
+      setTimeout(() => document.activeElement.blur(), 50);
     }
   </script>
 </body>
