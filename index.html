@@ -13,12 +13,28 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
+    /* 🔮 Animated Gradient Background */
     body {
       font-family: sans-serif;
-      background: #111;
       color: white;
       text-align: center;
       padding: 100px;
+      margin: 0;
+      background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #00cc99);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+    }
+
+    @keyframes gradientBG {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
     }
 
     h1 {
@@ -37,6 +53,7 @@
       box-shadow: 0 0 15px #00cc99, 0 0 30px #00cc99;
       transition: all 0.2s ease;
       animation: pop 1.5s infinite ease-in-out;
+      outline: none;
     }
 
     button:hover {
