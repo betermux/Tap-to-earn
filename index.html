@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Tap to Earn MGL</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+  
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -13,7 +13,6 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
-    /* 🔮 Background animation */
     body {
       font-family: sans-serif;
       color: white;
@@ -26,20 +25,13 @@
     }
 
     @keyframes gradientBG {
-      0% {
-        background-position: 0% 50%;
-      }
-      50% {
-        background-position: 100% 50%;
-      }
-      100% {
-        background-position: 0% 50%;
-      }
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
 
-    h1 {
-      font-size: 2rem;
-    }
+    h1 { font-size: 2rem; }
+    p { font-size: 1.2rem; }
 
     button {
       padding: 35px 50px;
@@ -50,11 +42,9 @@
       color: white;
       margin-top: 30px;
       cursor: pointer;
-
       box-shadow: 0 0 15px #00cc99, 0 0 30px #00cc99;
       transition: all 0.2s ease;
       animation: pop 1.5s infinite ease-in-out;
-
       outline: none !important;
       -webkit-tap-highlight-color: transparent;
     }
@@ -62,7 +52,6 @@
     button:focus,
     button:focus-visible {
       outline: none !important;
-      box-shadow: 0 0 15px #00cc99, 0 0 30px #00cc99;
     }
 
     button:active {
@@ -72,22 +61,31 @@
     }
 
     @keyframes pop {
-      0%, 100% {
-        transform: scale(1);
-      }
-      50% {
-        transform: scale(1.05);
-      }
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    #energy {
+      margin-top: 10px;
+      font-size: 1rem;
+      color: #00e6b8;
+    }
+
+    #msg {
+      margin-top: 15px;
+      color: #ff6666;
+      font-size: 1rem;
     }
   </style>
 </head>
 <body>
   <h1>EARN FREE TON COIN NOW, <span id="name">?</span>!</h1>
   <p>YOUR EARNED TON: <span id="score">0</span></p>
+  <p id="energy">Energy: 🔋 0/10</p>
+  <div id="msg"></div>
   <button id="tapButton" onclick="increaseScore()">TAP!</button>
 
   <script>
-    // Telegram init
     const tg = window.Telegram.WebApp;
     tg.expand();
     const user = tg.initDataUnsafe.user;
@@ -95,7 +93,6 @@
     const name = user?.first_name || "DEAR USER!";
     document.getElementById("name").innerText = name;
 
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyDiNaEW3K2TD-uZGHYP23YR_l-BZnEjtnE",
       authDomain: "taptoearnmgl.firebaseapp.com",
@@ -107,37 +104,85 @@
       measurementId: "G-433ZSKP5D6"
     };
 
-    // Firebase init
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-
-    let score = 0;
-    const scoreEl = document.getElementById("score");
     const userRef = db.ref("users/" + userId);
 
-    // Оноог татах
+    let score = 0;
+    let energy = 0;
+    let maxEnergy = 10;
+    let lastEnergyAt = Date.now();
+
+    const scoreEl = document.getElementById("score");
+    const energyEl = document.getElementById("energy");
+    const msgEl = document.getElementById("msg");
+
+    // Load user data
     userRef.once("value").then(snapshot => {
+      const now = Date.now();
       if (snapshot.exists()) {
-        score = snapshot.val().score || 0;
+        const data = snapshot.val();
+        score = data.score || 0;
+        energy = data.energy ?? maxEnergy;
+        lastEnergyAt = new Date(data.lastEnergyAt || now).getTime();
+
+        // Calculate recovered energy
+        const secondsPassed = Math.floor((now - lastEnergyAt) / 1000);
+        const recovered = Math.floor(secondsPassed / 5);
+        energy = Math.min(maxEnergy, energy + recovered);
       } else {
         userRef.set({
           username: user?.username || "",
           score: 0,
-          joined: new Date().toISOString()
+          energy: maxEnergy,
+          lastEnergyAt: new Date().toISOString()
         });
+        energy = maxEnergy;
       }
+
       scoreEl.innerText = score;
+      updateEnergyDisplay();
     });
 
-    // Оноо нэмэх
     function increaseScore() {
-      score += 1;
-      scoreEl.innerText = score;
-      userRef.update({ score });
+      if (energy > 0) {
+        score += 1;
+        energy -= 1;
+        lastEnergyAt = Date.now();
+        scoreEl.innerText = score;
+        updateEnergyDisplay();
+        msgEl.innerText = "";
 
-      // Фокус арилгах — Android WebView-д зориулсан
+        userRef.update({
+          score,
+          energy,
+          lastEnergyAt: new Date().toISOString()
+        });
+      } else {
+        msgEl.innerText = "⛔ No energy! Wait to refill...";
+      }
+
+      // remove button focus
       setTimeout(() => document.activeElement.blur(), 50);
     }
+
+    function updateEnergyDisplay() {
+      energyEl.innerText = `Energy: 🔋 ${energy}/${maxEnergy}`;
+    }
+
+    // Refill energy every 5 seconds
+    setInterval(() => {
+      if (energy < maxEnergy) {
+        energy += 1;
+        lastEnergyAt = Date.now();
+        updateEnergyDisplay();
+
+        userRef.update({
+          energy,
+          lastEnergyAt: new Date().toISOString()
+        });
+      }
+    }, 5000);
   </script>
 </body>
 </html>
