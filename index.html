@@ -17,7 +17,7 @@
       font-family: sans-serif;
       color: white;
       text-align: center;
-      padding: 100px;
+      padding: 60px 20px;
       margin: 0;
       background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #00cc99);
       background-size: 400% 400%;
@@ -30,8 +30,14 @@
       100% { background-position: 0% 50%; }
     }
 
-    h1 { font-size: 2rem; }
-    p { font-size: 1.2rem; }
+    h1, h2 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 1.2rem;
+    }
 
     button {
       padding: 35px 50px;
@@ -76,6 +82,22 @@
       color: #ff6666;
       font-size: 1rem;
     }
+
+    #leaderboard {
+      margin-top: 40px;
+      background: rgba(255,255,255,0.05);
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    #leaderboard h2 {
+      margin-bottom: 10px;
+    }
+
+    .player {
+      margin: 6px 0;
+      font-size: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -85,12 +107,19 @@
   <div id="msg"></div>
   <button id="tapButton" onclick="increaseScore()">TAP!</button>
 
+  <!-- Leaderboard -->
+  <div id="leaderboard">
+    <h2>🏆 Leaderboard</h2>
+    <div id="players">Loading...</div>
+  </div>
+
   <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
     const user = tg.initDataUnsafe.user;
     const userId = user?.id || "guest";
     const name = user?.first_name || "DEAR USER!";
+    const username = user?.username || "anon";
     document.getElementById("name").innerText = name;
 
     const firebaseConfig = {
@@ -110,14 +139,13 @@
 
     let score = 0;
     let energy = 0;
-    let maxEnergy = 1000;
+    const maxEnergy = 10;
     let lastEnergyAt = Date.now();
 
     const scoreEl = document.getElementById("score");
     const energyEl = document.getElementById("energy");
     const msgEl = document.getElementById("msg");
 
-    // Load user data
     userRef.once("value").then(snapshot => {
       const now = Date.now();
       if (snapshot.exists()) {
@@ -126,27 +154,27 @@
         energy = data.energy ?? maxEnergy;
         lastEnergyAt = new Date(data.lastEnergyAt || now).getTime();
 
-        // Calculate recovered energy
         const secondsPassed = Math.floor((now - lastEnergyAt) / 1000);
         const recovered = Math.floor(secondsPassed / 5);
         energy = Math.min(maxEnergy, energy + recovered);
       } else {
         userRef.set({
-          username: user?.username || "",
+          username: username,
           score: 0,
           energy: maxEnergy,
-          lastEnergyAt: new Date().toISOString()
+          joined: new Date().toISOString()
         });
         energy = maxEnergy;
       }
 
       scoreEl.innerText = score;
       updateEnergyDisplay();
+      loadLeaderboard();
     });
 
     function increaseScore() {
       if (energy > 0) {
-        score += 5;
+        score += 1;
         energy -= 1;
         lastEnergyAt = Date.now();
         scoreEl.innerText = score;
@@ -158,11 +186,12 @@
           energy,
           lastEnergyAt: new Date().toISOString()
         });
+
+        loadLeaderboard();
       } else {
         msgEl.innerText = "⛔ No energy! Wait to refill...";
       }
 
-      // remove button focus
       setTimeout(() => document.activeElement.blur(), 50);
     }
 
@@ -170,7 +199,7 @@
       energyEl.innerText = `Energy: 🔋 ${energy}/${maxEnergy}`;
     }
 
-    // Refill energy every 5 seconds
+    // Refill energy every 5 sec
     setInterval(() => {
       if (energy < maxEnergy) {
         energy += 1;
@@ -183,6 +212,30 @@
         });
       }
     }, 5000);
+
+    // Leaderboard татах
+    function loadLeaderboard() {
+      db.ref("users").once("value").then(snapshot => {
+        const players = [];
+        snapshot.forEach(child => {
+          const data = child.val();
+          players.push({
+            username: data.username || "anon",
+            score: data.score || 0
+          });
+        });
+
+        // Оноогоор буулгаж эрэмбэлнэ
+        players.sort((a, b) => b.score - a.score);
+
+        // Топ 10-г харуулна
+        const list = players.slice(0, 10).map((p, i) => {
+          return `<div class="player">#${i + 1} - @${p.username}: ${p.score}</div>`;
+        }).join("");
+
+        document.getElementById("players").innerHTML = list || "No players yet";
+      });
+    }
   </script>
 </body>
 </html>
