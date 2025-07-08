@@ -5,9 +5,9 @@
   <title>Tap to Earn MGL</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Firebase JS SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
+  <!-- Firebase Modular JS SDK (ESM биш хувилбар) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <!-- Telegram WebApp JS -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -44,11 +44,11 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
     const user = tg.initDataUnsafe.user;
-    const userId = user.id;
-    const name = user.first_name || "Хэрэглэгч";
+    const userId = user?.id || "guest";
+    const name = user?.first_name || "Хэрэглэгч";
     document.getElementById("name").innerText = name;
 
-    // Firebase config (чиний config)
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyDiNaEW3K2TD-uZGHYP23YR_l-BZnEjtnE",
       authDomain: "taptoearnmgl.firebaseapp.com",
@@ -60,32 +60,33 @@
       measurementId: "G-433ZSKP5D6"
     };
 
-    const app = firebase.initializeApp(firebaseConfig);
+    // Firebase init
+    firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
     let score = 0;
     const scoreEl = document.getElementById("score");
-
-    // Хэрэглэгч бүртгэх ба оноо татах
     const userRef = db.ref("users/" + userId);
+
+    // Оноог татах
     userRef.once("value").then(snapshot => {
       if (snapshot.exists()) {
         score = snapshot.val().score || 0;
-        scoreEl.innerText = score;
       } else {
         userRef.set({
-          username: user.username || "",
+          username: user?.username || "",
           score: 0,
           joined: new Date().toISOString()
         });
       }
+      scoreEl.innerText = score;
     });
 
-    // Оноо нэмэх функц
+    // Оноо нэмэх
     function increaseScore() {
       score += 1;
       scoreEl.innerText = score;
-      userRef.update({ score: score });
+      userRef.update({ score });
     }
   </script>
 </body>
