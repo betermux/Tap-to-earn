@@ -3,6 +3,11 @@
   <meta charset="UTF-8">
   <title>Tap to Earn MGL</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">  <!-- Firebase SDK -->  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <!-- Telegram WebApp JS -->  <script src="https://telegram.org/js/telegram-web-app.js"></script>  <style>
+    *:focus {
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
     body {
       font-family: sans-serif;
       background: linear-gradient(-45deg, #1a2a6c, #b21f1f, #fdbb2d);
@@ -38,11 +43,7 @@
       position: relative;
       z-index: 2;
       outline: none;
-    }
-
-    .tap-button:focus {
-      outline: none;
-      box-shadow: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .tap-button img {
@@ -52,20 +53,6 @@
 
     .tap-button:active img {
       transform: scale(0.95);
-    }
-
-    #leaderboard {
-      margin-top: 30px;
-      text-align: left;
-      max-width: 300px;
-      margin-left: auto;
-      margin-right: auto;
-      z-index: 2;
-      position: relative;
-    }
-
-    #leaderboard h2 {
-      text-align: center;
     }
 
     .emoji {
@@ -82,13 +69,56 @@
       0% { transform: translateY(-10px); }
       100% { transform: translateY(100vh); }
     }
+
+    #leaderboard-wrapper {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90%;
+      max-width: 400px;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.85);
+      border-radius: 15px;
+      z-index: 10;
+      animation: slideUp 0.5s ease forwards;
+    }
+
+    @keyframes slideUp {
+      0% { opacity: 0; transform: translate(-50%, -40%); }
+      100% { opacity: 1; transform: translate(-50%, -50%); }
+    }
+
+    #leaderboard-wrapper h2 {
+      margin-bottom: 10px;
+    }
+
+    #leaderList {
+      text-align: left;
+      margin-top: 10px;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      background: none;
+      color: white;
+      border: none;
+    }
   </style></head>
 <body>
   <h1>Сайн байна уу, <span id="name">?</span>!</h1>
   <p>Таны оноо: <span id="score">0</span></p>
   <p>Энерги: <span id="energy">10</span></p>  <button class="tap-button" onclick="increaseScore()">
     <img src="https://i.ibb.co/20r26xLd/Picsart-25-07-08-22-39-08-704.png" alt="Tap">
-  </button>  <div id="leaderboard">
+  </button><br><br> <button onclick="showLeaderboard()" style="margin-top:20px;padding:10px 20px;border-radius:12px;border:none;background:#333;color:white;font-size:1rem;cursor:pointer;">🏆 Leaderboard</button>
+
+  <div id="leaderboard-wrapper">
+    <button class="close-btn" onclick="hideLeaderboard()">✖</button>
     <h2>Leaderboard</h2>
     <ul id="leaderList"></ul>
   </div>  <!-- Falling Watermelon Emoji -->  <script>
@@ -158,6 +188,14 @@
         energyEl.innerText = energy;
       }
     }, 6000);
+
+    function showLeaderboard() {
+      document.getElementById("leaderboard-wrapper").style.display = 'block';
+    }
+
+    function hideLeaderboard() {
+      document.getElementById("leaderboard-wrapper").style.display = 'none';
+    }
 
     const leaderList = document.getElementById("leaderList");
     db.ref("users").orderByChild("score").limitToLast(10).on("value", snapshot => {
