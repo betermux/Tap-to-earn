@@ -75,6 +75,11 @@
       border-radius: 8px;
       cursor: pointer;
     }
+    #walletAddress {
+      margin-top: 15px;
+      font-size: 0.95rem;
+      color: #00e6e6;
+    }
   </style></head>
 <body>
   <script>
@@ -99,7 +104,7 @@ alt="Tap to Earn" />
     <div id="leaderList"></div>
   </div><button class="wallet-btn" onclick="connectWallet()">Connect TON Wallet</button>
 
-<audio id="popSound" src="https://assets.mixkit.co/sfx/download/mixkit-game-click-1114.wav" preload="auto"></audio>
+  <p id="walletAddress">Wallet: Not connected</p><audio id="popSound" src="https://assets.mixkit.co/sfx/download/mixkit-game-click-1114.wav" preload="auto"></audio>
 
   <script>
     const tg = window.Telegram.WebApp;
@@ -195,12 +200,14 @@ alt="Tap to Earn" />
 
     // TON Wallet connect
     const connector = new TON_CONNECT_UI.TonConnectUI();
-    function connectWallet() {
-      connector.connectWallet().then(account => {
-        alert("Wallet connected: " + account.address);
-      }).catch(e => {
+    async function connectWallet() {
+      try {
+        const connectedWallet = await connector.connectWallet();
+        document.getElementById("walletAddress").innerText = "Wallet: " + connectedWallet.account.address;
+      } catch (e) {
         alert("Wallet connection failed");
-      });
+        console.error(e);
+      }
     }
   </script></body>
 </html>
