@@ -102,7 +102,9 @@ alt="Tap to Earn" />
   <div id="leaderboard">
     <h2>🏆 Leaderboard</h2>
     <div id="leaderList"></div>
-  </div>  <script>
+  </div><audio id="popSound" src="https://assets.mixkit.co/sfx/download/mixkit-game-click-1114.wav" preload="auto"></audio>
+
+  <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
     const user = tg.initDataUnsafe.user;
@@ -126,6 +128,7 @@ alt="Tap to Earn" />
     const userRef = db.ref("users/" + userId);
     const scoreEl = document.getElementById("score");
     const energyEl = document.getElementById("energyValue");
+    const popSound = document.getElementById("popSound");
 
     let score = 0;
     let energy = 10;
@@ -136,6 +139,8 @@ alt="Tap to Earn" />
         energy--;
         energyEl.innerText = energy;
         increaseScore();
+        popSound.currentTime = 0;
+        popSound.play();
       } else {
         alert("⚡ Energy дууссан! Түр хүлээгээрэй...");
       }
