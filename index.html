@@ -7,11 +7,20 @@
 <style>
   body {
     font-family: sans-serif;
-    background: linear-gradient(to bottom, #000000, #1a1a1a);
+    background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #0f2027);
+    background-size: 400% 400%;
     color: white;
     text-align: center;
     padding: 30px;
     position: relative;
+    animation: gradientBG 15s ease infinite;
+    overflow-x: hidden;
+  }
+
+  @keyframes gradientBG {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
   }
 
   h1 {
@@ -40,9 +49,50 @@
     transform: scale(0.95);
   }
 
-  .tap-button:focus {
-    outline: none;
-    box-shadow: none;
+  .leaderboard-frame {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    background: rgba(0, 0, 0, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    z-index: 10;
+    width: 300px;
+    transition: transform 0.3s ease;
+  }
+
+  .leaderboard-frame.show {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  .leaderboard-frame h2 {
+    margin: 0 0 10px 0;
+  }
+
+  .leaderboard-frame ul {
+    list-style: none;
+    padding: 0;
+    text-align: left;
+  }
+
+  .leaderboard-frame li {
+    margin: 5px 0;
+  }
+
+  .leaderboard-btn {
+    margin-top: 20px;
+    padding: 8px 16px;
+    background: #1abc9c;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s ease;
+  }
+
+  .leaderboard-btn:hover {
+    background: #16a085;
   }
 
   .snow {
@@ -52,6 +102,7 @@
     background: white;
     animation: fall linear infinite;
     opacity: 0.7;
+    pointer-events: none;
   }
 
   @keyframes fall {
@@ -61,6 +112,7 @@
 </style>
 </head>
 <body>
+
 <h1>Сайн байна уу, <span id="name">?</span>!</h1>
 <p>Таны олсон МӨНГӨ: <span id="score">0.0</span> ₮</p>
 <p>Энерги: <span id="energy">10.0</span></p>
@@ -68,6 +120,14 @@
 <button class="tap-button" onclick="increaseScore()">
   <img src="https://i.ibb.co/20r26xLd/Picsart-25-07-08-22-39-08-704.png" alt="Tap">
 </button>
+
+<br>
+<button class="leaderboard-btn" onclick="toggleLeaderboard()">🏆 Лидерборд</button>
+
+<div id="leaderboard" class="leaderboard-frame">
+  <h2>🏆 Лидерборд</h2>
+  <ul id="leaderList"></ul>
+</div>
 
 <script>
 // Цасны эффект
@@ -114,6 +174,35 @@ setInterval(() => {
     energyEl.innerText = energy.toFixed(1);
   }
 }, 6000);
+
+// Лидерборд
+const leaderboardEl = document.getElementById("leaderboard");
+const leaderListEl = document.getElementById("leaderList");
+
+// Mock leaderboard data
+const leaderboardData = [
+  { name: "anon1", score: 250.0 },
+  { name: "anon2", score: 180.5 },
+  { name: "anon3", score: 120.3 },
+  { name: "anon4", score: 90.0 },
+  { name: "anon5", score: 50.0 }
+];
+
+function toggleLeaderboard() {
+  if (leaderboardEl.classList.contains("show")) {
+    leaderboardEl.classList.remove("show");
+  } else {
+    updateLeaderboard();
+    leaderboardEl.classList.add("show");
+  }
+}
+
+function updateLeaderboard() {
+  leaderListEl.innerHTML = leaderboardData
+    .map(u => `<li>${u.name}: ${u.score.toFixed(1)} ₮</li>`)
+    .join("");
+}
 </script>
+
 </body>
 </html>
