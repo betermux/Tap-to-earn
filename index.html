@@ -32,11 +32,24 @@
       background: none;
       border: none;
       cursor: pointer;
+      outline: none;
+      box-shadow: none;
+    }
+
+    .tap-button:focus {
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
+    .tap-button:focus-visible {
+      outline: none !important;
+      box-shadow: none !important;
     }
 
     .tap-button img {
       width: 160px;
       transition: transform 0.1s ease;
+      outline: none;
     }
 
     .tap-button:active img {
@@ -148,7 +161,6 @@
       }
     }
 
-    // Energy refill every 6 seconds
     setInterval(() => {
       if (energy < maxEnergy) {
         energy += 1;
@@ -156,7 +168,6 @@
       }
     }, 6000);
 
-    // Leaderboard
     const leaderList = document.getElementById("leaderList");
     db.ref("users").orderByChild("score").limitToLast(10).on("value", snapshot => {
       const data = [];
@@ -167,7 +178,6 @@
       leaderList.innerHTML = data.map(u => `<li>${u.name}: ${parseFloat(u.score).toFixed(1)} ₮</li>`).join("");
     });
 
-    // TonConnect
     const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
       manifestUrl: 'https://tap-to-earn-five.vercel.app/tonconnect-manifest.json',
       buttonRootId: 'ton-connect'
