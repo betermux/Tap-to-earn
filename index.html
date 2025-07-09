@@ -1,189 +1,125 @@
 <!DOCTYPE html>
 <html lang="mn">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Melonoid Bot</title>
-<style>
-  body {
-    font-family: sans-serif;
-    margin: 0;
-    background: linear-gradient(-45deg, #2ecc71, #27ae60, #2ecc71, #27ae60);
-    background-size: 400% 400%;
-    animation: gradientBG 10s ease infinite;
-    color: white;
-    text-align: center;
-    padding: 30px;
-    overflow-x: hidden;
-  }
+  <meta charset="UTF-8" />
+  <title>Tap to Earn MGL</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  @keyframes gradientBG {
-    0% {background-position: 0% 50%;}
-    50% {background-position: 100% 50%;}
-    100% {background-position: 0% 50%;}
-  }
+  <!-- Firebase JS SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
-  h1 {
-    font-size: 1.8rem;
-    margin-bottom: 10px;
-  }
+  <!-- Telegram WebApp JS -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  #score, #energy {
-    font-size: 1.2rem;
-    margin: 10px 0;
-  }
+  <style>
+    body {
+      font-family: sans-serif;
+      background: linear-gradient(135deg, #111, #1a1a1a);
+      color: white;
+      text-align: center;
+      padding: 60px 20px;
+    }
 
-  .tap-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    outline: none;
-  }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
 
-  .tap-button img {
-    width: 160px;
-    transition: transform 0.1s ease;
-  }
+    p {
+      font-size: 1.2rem;
+    }
 
-  .tap-button:active img {
-    transform: scale(0.95);
-  }
+    #tapImage {
+      width: 160px;
+      height: 160px;
+      cursor: pointer;
+      border-radius: 50%;
+      box-shadow: 0 0 15px #00cc99, 0 0 30px #00cc99;
+      animation: pop 1.5s infinite ease-in-out;
+      transition: transform 0.2s ease;
+      margin-top: 30px;
+    }
 
-  /* Focus арилгах */
-  button:focus {
-    outline: none;
-    box-shadow: none;
-  }
+    #tapImage:active {
+      transform: scale(0.92);
+      box-shadow: 0 0 10px #009977, 0 0 20px #009977;
+    }
 
-  .leaderboard-btn {
-    margin-top: 20px;
-    padding: 10px 20px;
-    background: rgba(0,0,0,0.3);
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    color: #fff;
-    font-weight: bold;
-    transition: background 0.3s ease;
-  }
-
-  .leaderboard-btn:hover {
-    background: rgba(0,0,0,0.5);
-  }
-
-  #leaderboardFrame {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    background: rgba(0,0,0,0.85);
-    color: white;
-    padding: 20px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 400px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    z-index: 1000;
-    transition: transform 0.3s ease;
-  }
-
-  #leaderboardFrame.show {
-    transform: translate(-50%, -50%) scale(1);
-  }
-
-  #leaderboardFrame h2 {
-    margin-top: 0;
-  }
-
-  #leaderboardFrame .close-btn {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.2rem;
-    cursor: pointer;
-  }
-
-  .snow {
-    position: fixed;
-    width: 2px;
-    height: 2px;
-    background: white;
-    animation: fall linear infinite;
-    opacity: 0.7;
-  }
-
-  @keyframes fall {
-    0% { transform: translateY(-10px); }
-    100% { transform: translateY(100vh); }
-  }
-</style>
+    @keyframes pop {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+  </style>
 </head>
 <body>
-  <h1>Сайн байна уу, <span id="name">User</span>!</h1>
-  <p>Таны олсон МӨНГӨ: <span id="score">0</span> ₮</p>
-  <p>Энерги: <span id="energy">10</span></p>
+  <h1>EARN FREE TON COIN, <span id="name">?</span>!</h1>
+  <p>YOUR EARNED TON: <span id="score">0</span></p>
 
-  <button class="tap-button" onclick="increaseScore()">
-    <img src="https://i.ibb.co/20r26xLd/Picsart-25-07-08-22-39-08-704.png" alt="Tap">
-  </button>
+  <!-- 👇 Tap image instead of button -->
+  <img src="https://www.imghippo.com/i/zoLY2295rmI.png"
+       id="tapImage"
+       onclick="increaseScore(); playPop();"
+       alt="Tap to Earn" />
 
-  <button class="leaderboard-btn" onclick="showLeaderboard()">🏆 Лидерборд</button>
-
-  <div id="leaderboardFrame">
-    <button class="close-btn" onclick="hideLeaderboard()">✖</button>
-    <h2>🏆 Лидерборд</h2>
-    <ul id="leaderList">
-      <li>anon: 250.0 ₮</li>
-      <li>anon: 28.0 ₮</li>
-      <li>betermux: 20.4 ₮</li>
-    </ul>
-  </div>
+  <!-- 👇 Pop sound -->
+  <audio id="popSound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3" preload="auto"></audio>
 
   <script>
-    // Энерги ба онооны логик
-    let score = 0;
-    let energy = 10;
-    const maxEnergy = 100;
+    // Telegram init
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    const user = tg.initDataUnsafe.user;
+    const userId = user?.id || "guest";
+    const name = user?.first_name || "User";
+    document.getElementById("name").innerText = name;
 
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDiNaEW3K2TD-uZGHYP23YR_l-BZnEjtnE",
+      authDomain: "taptoearnmgl.firebaseapp.com",
+      databaseURL: "https://taptoearnmgl-default-rtdb.firebaseio.com",
+      projectId: "taptoearnmgl",
+      storageBucket: "taptoearnmgl.appspot.com",
+      messagingSenderId: "906125335650",
+      appId: "1:906125335650:web:b7388d16b15fdacba6053b",
+      measurementId: "G-433ZSKP5D6"
+    };
+
+    // Firebase init
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
     const scoreEl = document.getElementById("score");
-    const energyEl = document.getElementById("energy");
+    const userRef = db.ref("users/" + userId);
 
+    let score = 0;
+
+    // Оноо татах
+    userRef.once("value").then(snapshot => {
+      if (snapshot.exists()) {
+        score = snapshot.val().score || 0;
+      } else {
+        userRef.set({
+          username: user?.username || "",
+          score: 0,
+          joined: new Date().toISOString()
+        });
+      }
+      scoreEl.innerText = score;
+    });
+
+    // Оноо нэмэх
     function increaseScore() {
-      if (energy > 0) {
-        score += 0.1;
-        energy -= 0.1;
-        scoreEl.innerText = score.toFixed(1);
-        energyEl.innerText = energy.toFixed(1);
-      }
+      score += 1;
+      scoreEl.innerText = score;
+      userRef.update({ score });
     }
 
-    setInterval(() => {
-      if (energy < maxEnergy) {
-        energy += 1;
-        energyEl.innerText = energy.toFixed(1);
-      }
-    }, 6000);
-
-    // Лидерборд
-    function showLeaderboard() {
-      document.getElementById("leaderboardFrame").classList.add("show");
-    }
-
-    function hideLeaderboard() {
-      document.getElementById("leaderboardFrame").classList.remove("show");
-    }
-
-    // Цасны effect
-    for (let i = 0; i < 100; i++) {
-      const snow = document.createElement('div');
-      snow.className = 'snow';
-      snow.style.left = Math.random() * 100 + 'vw';
-      snow.style.animationDuration = (Math.random() * 3 + 2) + 's';
-      snow.style.top = -Math.random() * 100 + 'px';
-      document.body.appendChild(snow);
+    // POP sound
+    function playPop() {
+      const snd = document.getElementById("popSound");
+      snd.currentTime = 0;
+      snd.play();
     }
   </script>
 </body>
