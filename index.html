@@ -1,80 +1,115 @@
-<!DOCTYPE html>
-<html lang="mn">
+<!DOCTYPE html><html lang="mn">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Tap to Earn MGL</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Firebase JS SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-
-  <!-- Telegram WebApp JS -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-  <style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <!-- Firebase SDK -->  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <!-- Telegram WebApp JS -->  <script src="https://telegram.org/js/telegram-web-app.js"></script>  <style>
     body {
       font-family: sans-serif;
-      background: linear-gradient(135deg, #111, #1a1a1a);
+      background: linear-gradient(-45deg, #1a2a6c, #b21f1f, #fdbb2d);
+      background-size: 600% 600%;
+      animation: gradientBG 15s ease infinite;
       color: white;
       text-align: center;
-      padding: 60px 20px;
+      padding: 30px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
 
     h1 {
-      font-size: 2rem;
+      font-size: 1.8rem;
       margin-bottom: 10px;
     }
 
-    p {
+    #score, #energy {
       font-size: 1.2rem;
+      margin: 10px 0;
     }
 
-    #tapImage {
-      width: 160px;
-      height: 160px;
+    .tap-button {
+      background: none;
+      border: none;
       cursor: pointer;
-      border-radius: 50%;
-      box-shadow: 0 0 15px #00cc99, 0 0 30px #00cc99;
-      animation: pop 1.5s infinite ease-in-out;
-      transition: transform 0.2s ease;
+      position: relative;
+      z-index: 2;
+      outline: none;
+    }
+
+    .tap-button:focus {
+      outline: none;
+      box-shadow: none;
+    }
+
+    .tap-button img {
+      width: 160px;
+      transition: transform 0.1s ease;
+    }
+
+    .tap-button:active img {
+      transform: scale(0.95);
+    }
+
+    #leaderboard {
       margin-top: 30px;
+      text-align: left;
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+      z-index: 2;
+      position: relative;
     }
 
-    #tapImage:active {
-      transform: scale(0.92);
-      box-shadow: 0 0 10px #009977, 0 0 20px #009977;
+    #leaderboard h2 {
+      text-align: center;
     }
 
-    @keyframes pop {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
+    .emoji {
+      position: fixed;
+      font-size: 20px;
+      animation: fall linear infinite;
+      opacity: 0.4;
+      pointer-events: none;
+      filter: blur(2px);
+      z-index: 0;
     }
-  </style>
-</head>
+
+    @keyframes fall {
+      0% { transform: translateY(-10px); }
+      100% { transform: translateY(100vh); }
+    }
+  </style></head>
 <body>
-  <h1>EARN FREE TON COIN, <span id="name">?</span>!</h1>
-  <p>YOUR EARNED TON: <span id="score">0</span></p>
-
-  <!-- 👇 Tap image instead of button -->
-  <img src="https://www.imghippo.com/i/zoLY2295rmI.png"
-       id="tapImage"
-       onclick="increaseScore(); playPop();"
-       alt="Tap to Earn" />
-
-  <!-- 👇 Pop sound -->
-  <audio id="popSound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3" preload="auto"></audio>
-
-  <script>
-    // Telegram init
+  <h1>Сайн байна уу, <span id="name">?</span>!</h1>
+  <p>Таны оноо: <span id="score">0</span></p>
+  <p>Энерги: <span id="energy">10</span></p>  <button class="tap-button" onclick="increaseScore()">
+    <img src="https://i.ibb.co/20r26xLd/Picsart-25-07-08-22-39-08-704.png" alt="Tap">
+  </button>  <div id="leaderboard">
+    <h2>Leaderboard</h2>
+    <ul id="leaderList"></ul>
+  </div>  <!-- Falling Watermelon Emoji -->  <script>
+    for (let i = 0; i < 25; i++) {
+      const emoji = document.createElement('div');
+      emoji.className = 'emoji';
+      emoji.innerText = '🍉';
+      emoji.style.left = Math.random() * 100 + 'vw';
+      emoji.style.animationDuration = (Math.random() * 3 + 4) + 's';
+      emoji.style.top = -Math.random() * 100 + 'px';
+      emoji.style.fontSize = (Math.random() * 10 + 16) + 'px';
+      document.body.appendChild(emoji);
+    }
+  </script>  <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
     const user = tg.initDataUnsafe.user;
-    const userId = user?.id || "guest";
-    const name = user?.first_name || "User";
+    const userId = user?.id || 'guest';
+    const name = user?.first_name || 'User';
     document.getElementById("name").innerText = name;
 
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyDiNaEW3K2TD-uZGHYP23YR_l-BZnEjtnE",
       authDomain: "taptoearnmgl.firebaseapp.com",
@@ -86,41 +121,52 @@
       measurementId: "G-433ZSKP5D6"
     };
 
-    // Firebase init
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const scoreEl = document.getElementById("score");
+    const energyEl = document.getElementById("energy");
+    let score = 0;
+    let energy = 10;
+    const maxEnergy = 10;
     const userRef = db.ref("users/" + userId);
 
-    let score = 0;
-
-    // Оноо татах
     userRef.once("value").then(snapshot => {
       if (snapshot.exists()) {
         score = snapshot.val().score || 0;
       } else {
-        userRef.set({
-          username: user?.username || "",
-          score: 0,
-          joined: new Date().toISOString()
-        });
+        userRef.set({ username: user?.username || '', score: 0, joined: new Date().toISOString() });
       }
       scoreEl.innerText = score;
     });
 
-    // Оноо нэмэх
     function increaseScore() {
-      score += 1;
-      scoreEl.innerText = score;
-      userRef.update({ score });
+      if (energy > 0) {
+        score += 1;
+        energy -= 1;
+        scoreEl.innerText = score;
+        energyEl.innerText = energy;
+        userRef.update({ score });
+        if (navigator.vibrate) navigator.vibrate(100);
+        const audio = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
+        audio.play().catch(e => {});
+      }
     }
 
-    // POP sound
-    function playPop() {
-      const snd = document.getElementById("popSound");
-      snd.currentTime = 0;
-      snd.play();
-    }
-  </script>
-</body>
+    setInterval(() => {
+      if (energy < maxEnergy) {
+        energy += 1;
+        energyEl.innerText = energy;
+      }
+    }, 6000);
+
+    const leaderList = document.getElementById("leaderList");
+    db.ref("users").orderByChild("score").limitToLast(10).on("value", snapshot => {
+      const data = [];
+      snapshot.forEach(child => {
+        data.push({ name: child.val().username || 'anon', score: child.val().score });
+      });
+      data.reverse();
+      leaderList.innerHTML = data.map(u => `<li>${u.name}: ${u.score}</li>`).join("");
+    });
+  </script></body>
 </html>
