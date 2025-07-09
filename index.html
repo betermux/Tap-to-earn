@@ -1,8 +1,8 @@
 <!DOCTYPE html><html lang="mn">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Tap to Earn MGL</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />  <!-- Firebase JS SDK -->  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <!-- Telegram WebApp JS -->  <script src="https://telegram.org/js/telegram-web-app.js"></script>  <style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />  <!-- Firebase SDK -->  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script src="https://telegram.org/js/telegram-web-app.js"></script>  <script src="https://unpkg.com/@tonconnect/ui@latest"></script>  <style>
     body {
       font-family: sans-serif;
       background: linear-gradient(135deg, #111, #1a1a1a);
@@ -11,16 +11,9 @@
       padding: 60px 20px;
       overflow: hidden;
     }
-
     h1 {
       font-size: 2rem;
-      margin-bottom: 10px;
     }
-
-    p {
-      font-size: 1.2rem;
-    }
-
     #tapImage {
       width: 160px;
       height: 160px;
@@ -31,33 +24,19 @@
       transition: transform 0.2s ease;
       margin-top: 30px;
     }
-
-  /* Эдгээр нь хүрээг бүрэн арилгана */
-  outline: none !important;
-  -webkit-tap-highlight-color: transparent;
-}
-
-tapImage:focus,
-tapImage:focus-visible {
-  outline: none !important;
-  box-shadow: 0 0 15px #00cc99, 0 0 30px #00cc99;
-}
     #tapImage:active {
       transform: scale(0.92);
       box-shadow: 0 0 10px #009977, 0 0 20px #009977;
     }
-
     @keyframes pop {
       0%, 100% { transform: scale(1); }
       50% { transform: scale(1.05); }
     }
-
     #energy {
       margin-top: 10px;
       font-size: 1.1rem;
       color: #00ccff;
     }
-
     #leaderboard {
       margin-top: 40px;
       text-align: left;
@@ -65,14 +44,12 @@ tapImage:focus-visible {
       margin-left: auto;
       margin-right: auto;
     }
-
     .leader-item {
       background: #222;
       padding: 10px;
       border-radius: 8px;
       margin: 5px 0;
     }
-
     .snow {
       position: absolute;
       width: 10px;
@@ -82,16 +59,24 @@ tapImage:focus-visible {
       opacity: 0.8;
       animation: fall linear infinite;
     }
-
     @keyframes fall {
       to {
         transform: translateY(100vh);
         opacity: 0;
       }
     }
+    button.wallet-btn {
+      margin-top: 20px;
+      padding: 12px 20px;
+      font-size: 1rem;
+      background: #007bff;
+      border: none;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
   </style></head>
 <body>
-  <!-- Snow effect -->
   <script>
     for (let i = 0; i < 120; i++) {
       const snow = document.createElement('div');
@@ -112,7 +97,9 @@ alt="Tap to Earn" />
   <div id="leaderboard">
     <h2>🏆 Leaderboard</h2>
     <div id="leaderList"></div>
-  </div><audio id="popSound" src="https://assets.mixkit.co/sfx/download/mixkit-game-click-1114.wav" preload="auto"></audio>
+  </div><button class="wallet-btn" onclick="connectWallet()">Connect TON Wallet</button>
+
+<audio id="popSound" src="https://assets.mixkit.co/sfx/download/mixkit-game-click-1114.wav" preload="auto"></audio>
 
   <script>
     const tg = window.Telegram.WebApp;
@@ -149,15 +136,17 @@ alt="Tap to Earn" />
         energy--;
         energyEl.innerText = energy;
         increaseScore();
-        popSound.currentTime = 0;
-        popSound.play();
 
-        // ✅ vibrate хийх
+        if (popSound) {
+          popSound.currentTime = 0;
+          popSound.play().catch(e => console.warn("Sound error", e));
+        }
+
         if (navigator.vibrate) {
           navigator.vibrate(50);
         }
       } else {
-        alert("⚡ wait for Energy refill...");
+        alert("⚡ Energy дууссан! Түр хүлээгээрэй...");
       }
     }
 
@@ -195,13 +184,23 @@ alt="Tap to Earn" />
       db.ref("users").orderByChild("score").limitToLast(10).once("value").then(snapshot => {
         const users = [];
         snapshot.forEach(child => {
-          users.push({ name: child.val().username || "@quest", score: child.val().score || 0 });
+          users.push({ name: child.val().username || "@anon", score: child.val().score || 0 });
         });
         users.reverse();
-        list.innerHTML = users.map(u => `<div class='leader-item'>${u.name}: ${u.score} 🍉</div>`).join('');
+        list.innerHTML = users.map(u => `<div class='leader-item'>${u.name}: ${u.score} 💎</div>`).join('');
       });
     }
 
     loadLeaderboard();
+
+    // TON Wallet connect
+    const connector = new TON_CONNECT_UI.TonConnectUI();
+    function connectWallet() {
+      connector.connectWallet().then(account => {
+        alert("Wallet connected: " + account.address);
+      }).catch(e => {
+        alert("Wallet connection failed");
+      });
+    }
   </script></body>
 </html>
