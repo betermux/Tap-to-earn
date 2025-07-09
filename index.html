@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Tap to Earn MGL</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />  <!-- Firebase JS SDK -->  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-compat.js"></script>  <!-- Telegram WebApp JS -->  <script src="https://telegram.org/js/telegram-web-app.js"></script>  <style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />  <!-- Firebase JS SDK -->  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <!-- Telegram WebApp JS -->  <script src="https://telegram.org/js/telegram-web-app.js"></script>  <style>
     body {
       font-family: sans-serif;
       background: linear-gradient(135deg, #111, #1a1a1a);
@@ -94,12 +94,10 @@
     }
   </script>  <h1>EARN FREE TON COIN, <span id="name">?</span>!</h1>
   <p>YOUR EARNED TON: <span id="score">0</span></p>
-  <p id="energy">Energy: <span id="energyValue">10</span></p><img src="https://www.imghippo.com/i/zoLY2295rmI.png"
+  <p id="energy">Energy: <span id="energyValue">10</span></p><img src="https://i.ibb.co/20r26xLd/Picsart-25-07-08-22-39-08-704.png"
 id="tapImage"
 onclick="handleTap()"
 alt="Tap to Earn" />
-
-<audio id="popSound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3" preload="auto"></audio>
 
   <div id="leaderboard">
     <h2>🏆 Leaderboard</h2>
@@ -133,18 +131,11 @@ alt="Tap to Earn" />
     let energy = 10;
     const maxEnergy = 10;
 
-    function playPop() {
-      const snd = document.getElementById("popSound");
-      snd.currentTime = 0;
-      snd.play();
-    }
-
     function handleTap() {
       if (energy > 0) {
         energy--;
         energyEl.innerText = energy;
         increaseScore();
-        playPop();
       } else {
         alert("⚡ Energy дууссан! Түр хүлээгээрэй...");
       }
