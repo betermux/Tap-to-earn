@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Melonoid Bot</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 <style>
   body {
     font-family: sans-serif;
@@ -135,56 +137,98 @@
   <div id="leaderboardFrame">
     <button class="close-btn" onclick="hideLeaderboard()">✖</button>
     <h2>🏆 Лидерборд</h2>
-    <ul id="leaderList">
-      <li>anon: 250.0 ₮</li>
-      <li>anon: 28.0 ₮</li>
-      <li>betermux: 20.4 ₮</li>
-    </ul>
+    <ul id="leaderList"></ul>
   </div>
 
-  <script>
-    // Энерги ба онооны логик
-    let score = 0;
-    let energy = 10;
-    const maxEnergy = 100;
+<script>
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    databaseURL: "YOUR_DATABASE_URL",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
 
-    const scoreEl = document.getElementById("score");
-    const energyEl = document.getElementById("energy");
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-    function increaseScore() {
-      if (energy > 0) {
-        score += 0.1;
-        energy -= 0.1;
-        scoreEl.innerText = score.toFixed(1);
-        energyEl.innerText = energy.toFixed(1);
-      }
+  // Хэрэглэгчийн ID (Жишээ болгож random)
+  const userId = "user_" + Math.floor(Math.random() * 10000);
+
+  let score = 0;
+  let energy = 10;
+  const maxEnergy = 100;
+
+  const scoreEl = document.getElementById("score");
+  const energyEl = document.getElementById("energy");
+  const leaderList = document.getElementById("leaderList");
+
+  function increaseScore() {
+    if (energy > 0) {
+      score += 0.1;
+      energy -= 0.1;
+      updateUI();
+      saveToFirebase();
     }
+  }
 
-    setInterval(() => {
-      if (energy < maxEnergy) {
-        energy += 1;
-        energyEl.innerText = energy.toFixed(1);
-      }
-    }, 6000);
+  function updateUI() {
+    scoreEl.innerText = score.toFixed(1);
+    energyEl.innerText = energy.toFixed(1);
+  }
 
-    // Лидерборд
-    function showLeaderboard() {
-      document.getElementById("leaderboardFrame").classList.add("show");
+  setInterval(() => {
+    if (energy < maxEnergy) {
+      energy += 1;
+      updateUI();
     }
+  }, 6000);
 
-    function hideLeaderboard() {
-      document.getElementById("leaderboardFrame").classList.remove("show");
-    }
+  function saveToFirebase() {
+    db.ref("users/" + userId).set({
+      name: userId,
+      score: parseFloat(score.toFixed(1)),
+      energy: parseFloat(energy.toFixed(1))
+    });
+  }
 
-    // Цасны effect
-    for (let i = 0; i < 100; i++) {
-      const snow = document.createElement('div');
-      snow.className = 'snow';
-      snow.style.left = Math.random() * 100 + 'vw';
-      snow.style.animationDuration = (Math.random() * 3 + 2) + 's';
-      snow.style.top = -Math.random() * 100 + 'px';
-      document.body.appendChild(snow);
-    }
-  </script>
+  function loadLeaderboard() {
+    db.ref("users").orderByChild("score").limitToLast(10).once("value", snapshot => {
+      leaderList.innerHTML = "";
+      const data = [];
+      snapshot.forEach(child => {
+        data.push(child.val());
+      });
+      data.reverse().forEach(user => {
+        const li = document.createElement("li");
+        li.innerText = `${user.name}: ${user.score} ₮`;
+        leaderList.appendChild(li);
+      });
+    });
+  }
+
+  function showLeaderboard() {
+    loadLeaderboard();
+    document.getElementById("leaderboardFrame").classList.add("show");
+  }
+
+  function hideLeaderboard() {
+    document.getElementById("leaderboardFrame").classList.remove("show");
+  }
+
+  // Цас
+  for (let i = 0; i < 100; i++) {
+    const snow = document.createElement('div');
+    snow.className = 'snow';
+    snow.style.left = Math.random() * 100 + 'vw';
+    snow.style.animationDuration = (Math.random() * 3 + 2) + 's';
+    snow.style.top = -Math.random() * 100 + 'px';
+    document.body.appendChild(snow);
+  }
+
+</script>
 </body>
 </html>
