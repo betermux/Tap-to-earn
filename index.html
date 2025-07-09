@@ -1,32 +1,26 @@
-<!DOCTYPE html><html lang="mn">
-<head>
+<!DOCTYPE html><html lang="mn"><head>
   <meta charset="UTF-8">
   <title>Tap to Earn MGL</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <!-- Telegram WebApp JS -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Pixel Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
     *:focus {
       outline: none !important;
       box-shadow: none !important;
     }body {
   font-family: sans-serif;
-  background: linear-gradient(-45deg, #1a2a6c, #b21f1f, #fdbb2d);
-  background-size: 600% 600%;
-  animation: gradientBG 15s ease infinite;
+  background: black;
   color: white;
   text-align: center;
   padding: 30px;
   position: relative;
   overflow: hidden;
-}
-
-@keyframes gradientBG {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
 }
 
 h1 {
@@ -76,35 +70,31 @@ h1 {
 #leaderboard-wrapper {
   display: none;
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.7);
-  z-index: 1000;
-}
-
-.pixel-frame {
-  background: url('https://i.ibb.co/gMpT7db1/ba89bca8247729ea77324718f7c284c813a88c52.gif') no-repeat center center;
-  background-size: cover;
-  position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(0.8);
   width: 90%;
   max-width: 400px;
-  height: 400px;
-  border-radius: 15px;
   padding: 20px;
-  box-sizing: border-box;
-  overflow-y: auto;
-  color: white;
+  background: rgba(0, 0, 0, 0.85);
+  border-radius: 15px;
+  z-index: 10;
+  animation: slideUp 0.4s ease forwards;
 }
 
-.pixel-frame h2 {
+@keyframes slideUp {
+  0% { opacity: 0; transform: translate(-50%, -40%) scale(0.8); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes slideDown {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -40%) scale(0.8); }
+}
+
+#leaderboard-wrapper h2 {
   margin-bottom: 10px;
   font-family: 'Press Start 2P', cursive;
-  font-size: 1rem;
 }
 
 #leaderList {
@@ -112,7 +102,6 @@ h1 {
   margin-top: 10px;
   font-family: 'Press Start 2P', cursive;
   font-size: 0.6rem;
-  line-height: 1.4em;
 }
 
 .close-btn {
@@ -126,21 +115,32 @@ h1 {
   border: none;
 }
 
+.background-frame {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('https://i.ibb.co/gMpT7db1/ba89bca8247729ea77324718f7c284c813a88c52.gif') center center / cover no-repeat;
+  z-index: -1;
+  opacity: 0.15;
+}
+
   </style>
 </head>
 <body>
+  <div class="background-frame"></div>
   <h1>Сайн байна уу, <span id="name">?</span>!</h1>
   <p>Таны оноо: <span id="score">0</span></p>
   <p>Энерги: <span id="energy">10</span></p>
   <button class="tap-button" onclick="increaseScore()">
     <img src="https://i.ibb.co/zhLx1sgc/1752059399737.png" alt="Tap">
-  </button><br><br>
+  </button>
+  <br><br>
   <button onclick="showLeaderboard()" style="margin-top:20px;padding:10px 20px;border-radius:12px;border:none;background:#333;color:white;font-size:1rem;cursor:pointer;">🏆 Leaderboard</button>  <div id="leaderboard-wrapper">
-    <div class="pixel-frame">
-      <button class="close-btn" onclick="hideLeaderboard()">✖</button>
-      <h2>Leaderboard</h2>
-      <ul id="leaderList"></ul>
-    </div>
+    <button class="close-btn" onclick="hideLeaderboard()">✖</button>
+    <h2>Leaderboard</h2>
+    <ul id="leaderList"></ul>
   </div>  <script>
     for (let i = 0; i < 25; i++) {
       const emoji = document.createElement('div');
@@ -196,7 +196,6 @@ h1 {
         scoreEl.innerText = score;
         energyEl.innerText = energy;
         userRef.update({ score });
-
         const audio = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
         audio.play().catch(e => {});
       }
@@ -210,11 +209,17 @@ h1 {
     }, 6000);
 
     function showLeaderboard() {
-      document.getElementById("leaderboard-wrapper").style.display = 'block';
+      const el = document.getElementById("leaderboard-wrapper");
+      el.style.display = 'block';
+      el.style.animation = 'slideUp 0.4s ease forwards';
     }
 
     function hideLeaderboard() {
-      document.getElementById("leaderboard-wrapper").style.display = 'none';
+      const el = document.getElementById("leaderboard-wrapper");
+      el.style.animation = 'slideDown 0.4s ease forwards';
+      setTimeout(() => {
+        el.style.display = 'none';
+      }, 400);
     }
 
     const leaderList = document.getElementById("leaderList");
