@@ -1,201 +1,119 @@
 <!DOCTYPE html>
 <html lang="mn">
 <head>
-  <meta charset="UTF-8">
-  <title>Tap to Earn MGL</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  <!-- Telegram WebApp JS -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- TonConnect UI -->
-  <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: linear-gradient(to bottom, #000000, #1a1a1a);
-      color: white;
-      text-align: center;
-      padding: 30px;
-      position: relative;
-    }
+<meta charset="UTF-8">
+<title>Tap to Earn MGL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    font-family: sans-serif;
+    background: linear-gradient(to bottom, #000000, #1a1a1a);
+    color: white;
+    text-align: center;
+    padding: 30px;
+    position: relative;
+  }
 
-    h1 {
-      font-size: 1.8rem;
-      margin-bottom: 10px;
-    }
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+  }
 
-    #score, #energy {
-      font-size: 1.2rem;
-      margin: 10px 0;
-    }
+  #score, #energy {
+    font-size: 1.2rem;
+    margin: 10px 0;
+  }
 
-    .tap-button {
-      background: none;
-      border: none;
-      cursor: pointer;
-      outline: none;
-    }
+  .tap-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    outline: none;
+  }
 
-    .tap-button img {
-      width: 160px;
-      transition: transform 0.1s ease;
-    }
+  .tap-button img {
+    width: 160px;
+    transition: transform 0.1s ease;
+  }
 
-    .tap-button:active img {
-      transform: scale(0.95);
-    }
+  .tap-button:active img {
+    transform: scale(0.95);
+  }
 
-    .tap-button:focus {
-      outline: none;
-      box-shadow: none;
-    }
+  .tap-button:focus {
+    outline: none;
+    box-shadow: none;
+  }
 
-    #leaderboard {
-      margin-top: 30px;
-      text-align: left;
-      max-width: 300px;
-      margin-left: auto;
-      margin-right: auto;
-    }
+  .snow {
+    position: fixed;
+    width: 2px;
+    height: 2px;
+    background: white;
+    animation: fall linear infinite;
+    opacity: 0.7;
+  }
 
-    #leaderboard h2 {
-      text-align: center;
-    }
-
-    .snow {
-      position: fixed;
-      width: 2px;
-      height: 2px;
-      background: white;
-      animation: fall linear infinite;
-      opacity: 0.7;
-    }
-
-    @keyframes fall {
-      0% { transform: translateY(-10px); }
-      100% { transform: translateY(100vh); }
-    }
-
-    #ton-connect {
-      display: flex;
-      justify-content: center;
-      margin-top: 15px;
-    }
-
-    #walletAddress {
-      margin-top: 10px;
-    }
-  </style>
+  @keyframes fall {
+    0% { transform: translateY(-10px); }
+    100% { transform: translateY(100vh); }
+  }
+</style>
 </head>
 <body>
-  <h1>Сайн байна уу, <span id="name">?</span>!</h1>
-  <p>Таны олсон МӨНГӨ: <span id="score">0</span> ₮</p>
-  <p>Энерги: <span id="energy">10</span></p>
-  <button class="tap-button" onclick="increaseScore()">
-    <img src="https://i.ibb.co/20r26xLd/Picsart-25-07-08-22-39-08-704.png" alt="Tap">
-  </button>
+<h1>Сайн байна уу, <span id="name">?</span>!</h1>
+<p>Таны олсон МӨНГӨ: <span id="score">0.0</span> ₮</p>
+<p>Энерги: <span id="energy">10.0</span></p>
 
-  <div id="ton-connect"></div>
-  <p id="walletAddress">Wallet: Not connected</p>
+<button class="tap-button" onclick="increaseScore()">
+  <img src="https://i.ibb.co/20r26xLd/Picsart-25-07-08-22-39-08-704.png" alt="Tap">
+</button>
 
-  <div id="leaderboard">
-    <h2>🏆 Leaderboard</h2>
-    <ul id="leaderList"></ul>
-  </div>
+<script>
+// Цасны эффект
+for (let i = 0; i < 100; i++) {
+  const snow = document.createElement('div');
+  snow.className = 'snow';
+  snow.style.left = Math.random() * 100 + 'vw';
+  snow.style.animationDuration = (Math.random() * 3 + 2) + 's';
+  snow.style.top = -Math.random() * 100 + 'px';
+  document.body.appendChild(snow);
+}
 
-  <!-- Snow -->
-  <script>
-    for (let i = 0; i < 100; i++) {
-      const snow = document.createElement('div');
-      snow.className = 'snow';
-      snow.style.left = Math.random() * 100 + 'vw';
-      snow.style.animationDuration = (Math.random() * 3 + 2) + 's';
-      snow.style.top = -Math.random() * 100 + 'px';
-      document.body.appendChild(snow);
-    }
-  </script>
+// Telegram хэрэглэгчийн нэр
+const tg = window.Telegram?.WebApp;
+tg?.expand();
 
-  <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-    const user = tg.initDataUnsafe.user;
-    const userId = user?.id || 'guest';
-    const name = user?.first_name || 'User';
-    document.getElementById("name").innerText = name;
+const user = tg?.initDataUnsafe?.user;
+const name = user?.first_name || 'User';
+document.getElementById("name").innerText = name;
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDiNaEW3K2TD-uZGHYP23YR_l-BZnEjtnE",
-      authDomain: "taptoearnmgl.firebaseapp.com",
-      databaseURL: "https://taptoearnmgl-default-rtdb.firebaseio.com",
-      projectId: "taptoearnmgl",
-      storageBucket: "taptoearnmgl.appspot.com",
-      messagingSenderId: "906125335650",
-      appId: "1:906125335650:web:b7388d16b15fdacba6053b",
-      measurementId: "G-433ZSKP5D6"
-    };
+// Оноо ба энерги
+const scoreEl = document.getElementById("score");
+const energyEl = document.getElementById("energy");
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const scoreEl = document.getElementById("score");
-    const energyEl = document.getElementById("energy");
-    let score = 0;
-    let energy = 1;
-    const maxEnergy = 1000;
-    const userRef = db.ref("users/" + userId);
+let score = 0.0;
+let energy = 10.0;
+const maxEnergy = 100.0;
 
-    userRef.once("value").then(snapshot => {
-      if (snapshot.exists()) {
-        score = snapshot.val().score || 0;
-      } else {
-        userRef.set({ username: user?.username || '', score: 0, joined: new Date().toISOString() });
-      }
-      scoreEl.innerText = score.toFixed(1);
-    });
+function increaseScore() {
+  if (energy > 0) {
+    score += 0.1;
+    energy -= 0.1;
+    scoreEl.innerText = score.toFixed(1);
+    energyEl.innerText = energy.toFixed(1);
+    navigator.vibrate?.(100);
+    new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3').play();
+  }
+}
 
-    function increaseScore() {
-      if (energy > 0) {
-        score += 0.1;
-        energy -= 0.1;
-        scoreEl.innerText = score.toFixed(1);
-        energyEl.innerText = energy.toFixed(1);
-        userRef.update({ score });
-        navigator.vibrate?.(100);
-        new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3').play();
-      }
-    }
-
-    setInterval(() => {
-      if (energy < maxEnergy) {
-        energy += 1;
-        energyEl.innerText = energy.toFixed(1);
-      }
-    }, 6000);
-
-    const leaderList = document.getElementById("leaderList");
-    db.ref("users").orderByChild("score").limitToLast(10).on("value", snapshot => {
-      const data = [];
-      snapshot.forEach(child => {
-        data.push({ name: child.val().username || 'anon', score: child.val().score });
-      });
-      data.reverse();
-      leaderList.innerHTML = data.map(u => `<li>${u.name}: ${u.score.toFixed(1)} ₮</li>`).join("");
-    });
-
-    const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-      manifestUrl: 'https://tap-to-earn-five.vercel.app/tonconnect-manifest.json',
-      buttonRootId: 'ton-connect'
-    });
-
-    tonConnectUI.onStatusChanged(status => {
-      const addrEl = document.getElementById("walletAddress");
-      if (status.connected) {
-        addrEl.innerText = "Wallet: " + status.account.address;
-      } else {
-        addrEl.innerText = "Wallet: Not connected";
-      }
-    });
-  </script>
+// Энерги аажмаар нэмэгдэх
+setInterval(() => {
+  if (energy < maxEnergy) {
+    energy += 1.0;
+    energyEl.innerText = energy.toFixed(1);
+  }
+}, 6000);
+</script>
 </body>
 </html>
