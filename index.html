@@ -4,11 +4,20 @@
   <meta charset="UTF-8">
   <title>Tap to Earn MGL</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <!-- Telegram WebApp JS -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- TonConnect UI -->
   <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
   <style>
+    * {
+      outline: none !important;
+      box-shadow: none !important;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     body {
       font-family: sans-serif;
       background: linear-gradient(to bottom, #000000, #1a1a1a);
@@ -34,22 +43,12 @@
       cursor: pointer;
       outline: none;
       box-shadow: none;
-    }
-
-    .tap-button:focus {
-      outline: none !important;
-      box-shadow: none !important;
-    }
-
-    .tap-button:focus-visible {
-      outline: none !important;
-      box-shadow: none !important;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .tap-button img {
       width: 160px;
       transition: transform 0.1s ease;
-      outline: none;
     }
 
     .tap-button:active img {
@@ -85,22 +84,19 @@
 </head>
 <body>
   <h1>Сайн байна уу, <span id="name">?</span>!</h1>
-  <p>Таны олсон МӨНГӨ: <span id="score">0.0</span> ₮</p>
+  <p>Таны олсон МӨНГӨ: <span id="score">0</span> ₮</p>
   <p>Энерги: <span id="energy">10</span></p>
-
   <button class="tap-button" onclick="increaseScore()">
     <img src="https://i.ibb.co/20r26xLd/Picsart-25-07-08-22-39-08-704.png" alt="Tap">
   </button>
-
   <div id="ton-connect"></div>
   <p id="walletAddress">Wallet: Not connected</p>
-
   <div id="leaderboard">
     <h2>🏆 Leaderboard</h2>
     <ul id="leaderList"></ul>
   </div>
 
-  <!-- Snow Effect -->
+  <!-- Snow -->
   <script>
     for (let i = 0; i < 100; i++) {
       const snow = document.createElement('div');
@@ -161,6 +157,7 @@
       }
     }
 
+    // Energy refill every 6 seconds
     setInterval(() => {
       if (energy < maxEnergy) {
         energy += 1;
@@ -168,6 +165,7 @@
       }
     }, 6000);
 
+    // Leaderboard
     const leaderList = document.getElementById("leaderList");
     db.ref("users").orderByChild("score").limitToLast(10).on("value", snapshot => {
       const data = [];
@@ -175,9 +173,10 @@
         data.push({ name: child.val().username || 'anon', score: child.val().score });
       });
       data.reverse();
-      leaderList.innerHTML = data.map(u => `<li>${u.name}: ${parseFloat(u.score).toFixed(1)} ₮</li>`).join("");
+      leaderList.innerHTML = data.map(u => `<li>${u.name}: ${u.score.toFixed(1)} ₮</li>`).join("");
     });
 
+    // TonConnect
     const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
       manifestUrl: 'https://tap-to-earn-five.vercel.app/tonconnect-manifest.json',
       buttonRootId: 'ton-connect'
