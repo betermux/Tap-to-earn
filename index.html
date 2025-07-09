@@ -176,7 +176,8 @@
         scoreEl.innerText = score;
         energyEl.innerText = energy;
         userRef.update({ score });
-        if (navigator.vibrate) navigator.vibrate(100);
+
+        // ✅ pop sound
         const audio = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
         audio.play().catch(e => {});
       }
