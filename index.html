@@ -2,18 +2,18 @@
 <html lang="mn">
 <head>
 <meta charset="UTF-8">
-<title>Tap to Earn MGL</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Melonoid Bot</title>
 <style>
   body {
     font-family: sans-serif;
-    background: linear-gradient(-45deg, #11998e, #38ef7d, #56ab2f, #a8e063);
+    margin: 0;
+    background: linear-gradient(-45deg, #2ecc71, #27ae60, #2ecc71, #27ae60);
     background-size: 400% 400%;
+    animation: gradientBG 10s ease infinite;
     color: white;
     text-align: center;
     padding: 30px;
-    position: relative;
-    animation: gradientBG 15s ease infinite;
     overflow-x: hidden;
   }
 
@@ -49,60 +49,60 @@
     transform: scale(0.95);
   }
 
-  .leaderboard-frame {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    background: rgba(0, 0, 0, 0.9);
-    padding: 20px;
-    border-radius: 10px;
-    z-index: 10;
-    width: 300px;
-    transition: transform 0.3s ease;
-  }
-
-  .leaderboard-frame.show {
-    transform: translate(-50%, -50%) scale(1);
-  }
-
-  .leaderboard-frame h2 {
-    margin: 0 0 10px 0;
-  }
-
-  .leaderboard-frame ul {
-    list-style: none;
-    padding: 0;
-    text-align: left;
-  }
-
-  .leaderboard-frame li {
-    margin: 5px 0;
+  /* Focus арилгах */
+  button:focus {
+    outline: none;
+    box-shadow: none;
   }
 
   .leaderboard-btn {
     margin-top: 20px;
-    padding: 8px 16px;
-    background: #2ecc71;
+    padding: 10px 20px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
     border: none;
-    border-radius: 5px;
     cursor: pointer;
+    color: #fff;
     font-weight: bold;
     transition: background 0.3s ease;
   }
 
   .leaderboard-btn:hover {
-    background: #27ae60;
+    background: rgba(0,0,0,0.5);
   }
 
-  .close-btn {
+  #leaderboardFrame {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    background: rgba(0,0,0,0.85);
+    color: white;
+    padding: 20px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    z-index: 1000;
+    transition: transform 0.3s ease;
+  }
+
+  #leaderboardFrame.show {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  #leaderboardFrame h2 {
+    margin-top: 0;
+  }
+
+  #leaderboardFrame .close-btn {
     position: absolute;
-    top: 5px;
-    right: 10px;
-    background: transparent;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
     color: white;
     font-size: 1.2rem;
-    border: none;
     cursor: pointer;
   }
 
@@ -113,7 +113,6 @@
     background: white;
     animation: fall linear infinite;
     opacity: 0.7;
-    pointer-events: none;
   }
 
   @keyframes fall {
@@ -123,98 +122,69 @@
 </style>
 </head>
 <body>
+  <h1>Сайн байна уу, <span id="name">User</span>!</h1>
+  <p>Таны олсон МӨНГӨ: <span id="score">0</span> ₮</p>
+  <p>Энерги: <span id="energy">10</span></p>
 
-<h1>Сайн байна уу, <span id="name">?</span>!</h1>
-<p>Таны олсон МӨНГӨ: <span id="score">0.0</span> ₮</p>
-<p>Энерги: <span id="energy">10.0</span></p>
+  <button class="tap-button" onclick="increaseScore()">
+    <img src="https://i.ibb.co/20r26xLd/Picsart-25-07-08-22-39-08-704.png" alt="Tap">
+  </button>
 
-<button class="tap-button" onclick="increaseScore()">
-  <img src="https://i.ibb.co/20r26xLd/Picsart-25-07-08-22-39-08-704.png" alt="Tap">
-</button>
+  <button class="leaderboard-btn" onclick="showLeaderboard()">🏆 Лидерборд</button>
 
-<br>
-<button class="leaderboard-btn" onclick="toggleLeaderboard()">🏆 Лидерборд</button>
+  <div id="leaderboardFrame">
+    <button class="close-btn" onclick="hideLeaderboard()">✖</button>
+    <h2>🏆 Лидерборд</h2>
+    <ul id="leaderList">
+      <li>anon: 250.0 ₮</li>
+      <li>anon: 28.0 ₮</li>
+      <li>betermux: 20.4 ₮</li>
+    </ul>
+  </div>
 
-<div id="leaderboard" class="leaderboard-frame">
-  <button class="close-btn" onclick="toggleLeaderboard()">✖</button>
-  <h2>🏆 Лидерборд</h2>
-  <ul id="leaderList"></ul>
-</div>
+  <script>
+    // Энерги ба онооны логик
+    let score = 0;
+    let energy = 10;
+    const maxEnergy = 100;
 
-<script>
-// Цасны эффект
-for (let i = 0; i < 100; i++) {
-  const snow = document.createElement('div');
-  snow.className = 'snow';
-  snow.style.left = Math.random() * 100 + 'vw';
-  snow.style.animationDuration = (Math.random() * 3 + 2) + 's';
-  snow.style.top = -Math.random() * 100 + 'px';
-  document.body.appendChild(snow);
-}
+    const scoreEl = document.getElementById("score");
+    const energyEl = document.getElementById("energy");
 
-// Telegram хэрэглэгчийн нэр
-const tg = window.Telegram?.WebApp;
-tg?.expand();
+    function increaseScore() {
+      if (energy > 0) {
+        score += 0.1;
+        energy -= 0.1;
+        scoreEl.innerText = score.toFixed(1);
+        energyEl.innerText = energy.toFixed(1);
+      }
+    }
 
-const user = tg?.initDataUnsafe?.user;
-const name = user?.first_name || 'User';
-document.getElementById("name").innerText = name;
+    setInterval(() => {
+      if (energy < maxEnergy) {
+        energy += 1;
+        energyEl.innerText = energy.toFixed(1);
+      }
+    }, 6000);
 
-// Оноо ба энерги
-const scoreEl = document.getElementById("score");
-const energyEl = document.getElementById("energy");
+    // Лидерборд
+    function showLeaderboard() {
+      document.getElementById("leaderboardFrame").classList.add("show");
+    }
 
-let score = 0.0;
-let energy = 10.0;
-const maxEnergy = 100.0;
+    function hideLeaderboard() {
+      document.getElementById("leaderboardFrame").classList.remove("show");
+    }
 
-function increaseScore() {
-  if (energy > 0) {
-    score += 0.1;
-    energy -= 0.1;
-    scoreEl.innerText = score.toFixed(1);
-    energyEl.innerText = energy.toFixed(1);
-    navigator.vibrate?.(100);
-    new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3').play();
-  }
-}
-
-// Энерги аажмаар нэмэгдэх
-setInterval(() => {
-  if (energy < maxEnergy) {
-    energy += 1.0;
-    energyEl.innerText = energy.toFixed(1);
-  }
-}, 6000);
-
-// Лидерборд
-const leaderboardEl = document.getElementById("leaderboard");
-const leaderListEl = document.getElementById("leaderList");
-
-// Mock leaderboard data
-const leaderboardData = [
-  { name: "anon1", score: 250.0 },
-  { name: "anon2", score: 180.5 },
-  { name: "anon3", score: 120.3 },
-  { name: "anon4", score: 90.0 },
-  { name: "anon5", score: 50.0 }
-];
-
-function toggleLeaderboard() {
-  if (leaderboardEl.classList.contains("show")) {
-    leaderboardEl.classList.remove("show");
-  } else {
-    updateLeaderboard();
-    leaderboardEl.classList.add("show");
-  }
-}
-
-function updateLeaderboard() {
-  leaderListEl.innerHTML = leaderboardData
-    .map(u => `<li>${u.name}: ${u.score.toFixed(1)} ₮</li>`)
-    .join("");
-}
-</script>
-
+    // Цасны effect
+    for (let i = 0; i < 100; i++) {
+      const snow = document.createElement('div');
+      snow.className = 'snow';
+      snow.style.left = Math.random() * 100 + 'vw';
+      snow.style.animationDuration = (Math.random() * 3 + 2) + 's';
+      snow.style.top = -Math.random() * 100 + 'px';
+      document.body.appendChild(snow);
+    }
+  </script>
 </body>
 </html>
