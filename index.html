@@ -141,6 +141,11 @@ alt="Tap to Earn" />
         increaseScore();
         popSound.currentTime = 0;
         popSound.play();
+
+        // ✅ vibrate хийх
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
+        }
       } else {
         alert("⚡ Energy дууссан! Түр хүлээгээрэй...");
       }
@@ -153,7 +158,7 @@ alt="Tap to Earn" />
       }
     }
 
-    setInterval(refillEnergy, 6000); // 1 energy = 6 секунд
+    setInterval(refillEnergy, 6000);
 
     userRef.once("value").then(snapshot => {
       if (snapshot.exists()) {
