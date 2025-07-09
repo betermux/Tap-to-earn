@@ -72,8 +72,8 @@
 </head>
 <body>
   <h1>Сайн байна уу, <span id="name">?</span>!</h1>
-  <p>Таны олсон МӨНГӨ: <span id="score">0.0</span></p>
-  <p>Энерги: <span id="energy">1.0</span></p>
+  <p>Таны олсон МӨНГӨ: <span id="score">0.0</span> ₮</p>
+  <p>Энерги: <span id="energy">10</span></p>
 
   <button class="tap-button" onclick="increaseScore()">
     <img src="https://i.ibb.co/20r26xLd/Picsart-25-07-08-22-39-08-704.png" alt="Tap">
@@ -83,12 +83,12 @@
   <p id="walletAddress">Wallet: Not connected</p>
 
   <div id="leaderboard">
-    <h2>Leaderboard</h2>
+    <h2>🏆 Leaderboard</h2>
     <ul id="leaderList"></ul>
   </div>
 
+  <!-- Snow Effect -->
   <script>
-    // Цасан ширхэг үүсгэх
     for (let i = 0; i < 100; i++) {
       const snow = document.createElement('div');
       snow.className = 'snow';
@@ -97,8 +97,9 @@
       snow.style.top = -Math.random() * 100 + 'px';
       document.body.appendChild(snow);
     }
+  </script>
 
-    // Telegram WebApp
+  <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
     const user = tg.initDataUnsafe.user;
@@ -106,7 +107,6 @@
     const name = user?.first_name || 'User';
     document.getElementById("name").innerText = name;
 
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyDiNaEW3K2TD-uZGHYP23YR_l-BZnEjtnE",
       authDomain: "taptoearnmgl.firebaseapp.com",
@@ -120,13 +120,11 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-
     const scoreEl = document.getElementById("score");
     const energyEl = document.getElementById("energy");
     let score = 0;
-    let energy = 1.0;
+    let energy = 1;
     const maxEnergy = 1000;
-
     const userRef = db.ref("users/" + userId);
 
     userRef.once("value").then(snapshot => {
@@ -136,32 +134,24 @@
         userRef.set({ username: user?.username || '', score: 0, joined: new Date().toISOString() });
       }
       scoreEl.innerText = score.toFixed(1);
-      energyEl.innerText = energy.toFixed(1);
     });
 
     function increaseScore() {
       if (energy > 0) {
         score += 0.1;
         energy -= 0.1;
-
-        // Дугуйруулсан утгуудыг харуулах
         scoreEl.innerText = score.toFixed(1);
         energyEl.innerText = energy.toFixed(1);
-
-        // Firebase-д хадгалахдаа тоон утга болгох
-        userRef.update({ score: parseFloat(score.toFixed(1)) });
-
-        // Хариу үйлдэл
+        userRef.update({ score });
         navigator.vibrate?.(100);
         new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3').play();
       }
     }
 
-    // Энерги дахин цэнэглэх (6 секунд тутамд 1 нэмэгдэнэ)
+    // Energy refill every 6 seconds
     setInterval(() => {
       if (energy < maxEnergy) {
         energy += 1;
-        if (energy > maxEnergy) energy = maxEnergy;
         energyEl.innerText = energy.toFixed(1);
       }
     }, 6000);
@@ -174,10 +164,10 @@
         data.push({ name: child.val().username || 'anon', score: child.val().score });
       });
       data.reverse();
-      leaderList.innerHTML = data.map(u => `<li>${u.name}: ${parseFloat(u.score).toFixed(1)}</li>`).join("");
+      leaderList.innerHTML = data.map(u => `<li>${u.name}: ${parseFloat(u.score).toFixed(1)} ₮</li>`).join("");
     });
 
-    // TonConnect wallet
+    // TonConnect
     const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
       manifestUrl: 'https://tap-to-earn-five.vercel.app/tonconnect-manifest.json',
       buttonRootId: 'ton-connect'
