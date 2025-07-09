@@ -105,8 +105,8 @@
     const scoreEl = document.getElementById("score");
     const energyEl = document.getElementById("energy");
     let score = 0;
-    let energy = 10;
-    const maxEnergy = 10;
+    let energy = 1;
+    const maxEnergy = 1000;
     const userRef = db.ref("users/" + userId);
 
     userRef.once("value").then(snapshot => {
@@ -120,8 +120,8 @@
 
     function increaseScore() {
       if (energy > 0) {
-        score += 1;
-        energy -= 1;
+        score += 0.1;
+        energy -= 0.1;
         scoreEl.innerText = score;
         energyEl.innerText = energy;
         userRef.update({ score });
@@ -130,7 +130,7 @@
       }
     }
 
-    // Energy refill every 6 seconds
+    // Energy refill every 1 seconds
     setInterval(() => {
       if (energy < maxEnergy) {
         energy += 1;
