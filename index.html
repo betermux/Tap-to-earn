@@ -32,6 +32,17 @@
       margin-top: 30px;
     }
 
+
+  /* Эдгээр нь хүрээг бүрэн арилгана */
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus,
+button:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 15px #00cc99, 0 0 30px #00cc99;
+}
     #tapImage:active {
       transform: scale(0.92);
       box-shadow: 0 0 10px #009977, 0 0 20px #009977;
