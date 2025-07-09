@@ -1,13 +1,167 @@
-Tap to Earn MGL body { font-family: sans-serif; background: linear-gradient(135deg, #111, #1a1a1a); color: white; text-align: center; padding: 60px 20px; } h1 { font-size: 2rem; margin-bottom: 10px; } p { font-size: 1.2rem; } #tapImage { width: 160px; height: 160px; cursor: pointer; border-radius: 50%; box-shadow: 0 0 15px #00cc99, 0 0 30px #00cc99; animation: pop 1.5s infinite ease-in-out; transition: transform 0.2s ease; margin-top: 30px; } #tapImage:active { transform: scale(0.92); box-shadow: 0 0 10px #009977, 0 0 20px #009977; } @keyframes pop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } } #energy { margin-top: 10px; font-size: 1.1rem; color: #00ccff; } #leaderboard { margin-top: 40px; text-align: left; max-width: 400px; margin-left: auto; margin-right: auto; } .leader-item { background: #222; padding: 10px; border-radius: 8px; margin: 5px 0; } EARN FREE TON COIN, ?! 
+<!DOCTYPE html><html lang="mn">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tap to Earn MGL</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />  <!-- Firebase JS SDK -->  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-compat.js"></script>  <!-- Telegram WebApp JS -->  <script src="https://telegram.org/js/telegram-web-app.js"></script>  <style>
+    body {
+      font-family: sans-serif;
+      background: linear-gradient(135deg, #111, #1a1a1a);
+      color: white;
+      text-align: center;
+      padding: 60px 20px;
+    }
 
-YOUR EARNED TON: 0
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
 
-Energy: 10
+    p {
+      font-size: 1.2rem;
+    }
 
-🏆 Leaderboard 
+    #tapImage {
+      width: 160px;
+      height: 160px;
+      cursor: pointer;
+      border-radius: 50%;
+      box-shadow: 0 0 15px #00cc99, 0 0 30px #00cc99;
+      animation: pop 1.5s infinite ease-in-out;
+      transition: transform 0.2s ease;
+      margin-top: 30px;
+    }
 
-const tg = window.Telegram.WebApp; tg.expand(); const user = tg.initDataUnsafe.user; const userId = user?.id || "guest"; const name = user?.first_name || "User"; document.getElementById("name").innerText = name; const firebaseConfig = { apiKey: "AIzaSyDiNaEW3K2TD-uZGHYP23YR_l-BZnEjtnE", authDomain: "taptoearnmgl.firebaseapp.com", databaseURL: "https://taptoearnmgl-default-rtdb.firebaseio.com", projectId: "taptoearnmgl", storageBucket: "taptoearnmgl.appspot.com", messagingSenderId: "906125335650", appId: "1:906125335650:web:b7388d16b15fdacba6053b", measurementId: "G-433ZSKP5D6" }; firebase.initializeApp(firebaseConfig); const db = firebase.database(); const userRef = db.ref("users/" + userId); const scoreEl = document.getElementById("score"); const energyEl = document.getElementById("energyValue"); let score = 0; let energy = 10; const maxEnergy = 10; function playPop() { const snd = document.getElementById("popSound"); snd.currentTime = 0; snd.play(); } function handleTap() { if (energy > 0) { energy--; energyEl.innerText = energy; increaseScore(); playPop(); } else { alert("⚡ Energy дууссан! Түр хүлээгээрэй..."); } } function refillEnergy() { if (energy { if (snapshot.exists()) { const data = snapshot.val(); score = data.score || 0; scoreEl.innerText = score; } else { userRef.set({ username: user?.username || "", score: 0, joined: new Date().toISOString() }); } }); function increaseScore() { score++; scoreEl.innerText = score; userRef.update({ score }); } function loadLeaderboard() { const list = document.getElementById("leaderList"); db.ref("users").orderByChild("score").limitToLast(10).once("value").then(snapshot => { const users = []; snapshot.forEach(child => { users.push({ name: child.val().username || "@anon", score: child.val().score || 0 }); }); users.reverse(); list.innerHTML = users.map(u => `
+    #tapImage:active {
+      transform: scale(0.92);
+      box-shadow: 0 0 10px #009977, 0 0 20px #009977;
+    }
 
-${u.name}: ${u.score} 💎
+    @keyframes pop {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
 
-`).join(''); }); } loadLeaderboard(); 
+    #energy {
+      margin-top: 10px;
+      font-size: 1.1rem;
+      color: #00ccff;
+    }
+
+    #leaderboard {
+      margin-top: 40px;
+      text-align: left;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .leader-item {
+      background: #222;
+      padding: 10px;
+      border-radius: 8px;
+      margin: 5px 0;
+    }
+  </style></head>
+<body>
+  <h1>EARN FREE TON COIN, <span id="name">?</span>!</h1>
+  <p>YOUR EARNED TON: <span id="score">0</span></p>
+  <p id="energy">Energy: <span id="energyValue">10</span></p><img src="https://www.imghippo.com/i/zoLY2295rmI.png"
+id="tapImage"
+onclick="handleTap()"
+alt="Tap to Earn" />
+
+<audio id="popSound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3" preload="auto"></audio>
+
+  <div id="leaderboard">
+    <h2>🏆 Leaderboard</h2>
+    <div id="leaderList"></div>
+  </div>  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    const user = tg.initDataUnsafe.user;
+    const userId = user?.id || "guest";
+    const name = user?.first_name || "User";
+    document.getElementById("name").innerText = name;
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDiNaEW3K2TD-uZGHYP23YR_l-BZnEjtnE",
+      authDomain: "taptoearnmgl.firebaseapp.com",
+      databaseURL: "https://taptoearnmgl-default-rtdb.firebaseio.com",
+      projectId: "taptoearnmgl",
+      storageBucket: "taptoearnmgl.appspot.com",
+      messagingSenderId: "906125335650",
+      appId: "1:906125335650:web:b7388d16b15fdacba6053b",
+      measurementId: "G-433ZSKP5D6"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const userRef = db.ref("users/" + userId);
+    const scoreEl = document.getElementById("score");
+    const energyEl = document.getElementById("energyValue");
+
+    let score = 0;
+    let energy = 10;
+    const maxEnergy = 10;
+
+    function playPop() {
+      const snd = document.getElementById("popSound");
+      snd.currentTime = 0;
+      snd.play();
+    }
+
+    function handleTap() {
+      if (energy > 0) {
+        energy--;
+        energyEl.innerText = energy;
+        increaseScore();
+        playPop();
+      } else {
+        alert("⚡ Energy дууссан! Түр хүлээгээрэй...");
+      }
+    }
+
+    function refillEnergy() {
+      if (energy < maxEnergy) {
+        energy++;
+        energyEl.innerText = energy;
+      }
+    }
+
+    setInterval(refillEnergy, 6000); // 1 energy = 6 секунд
+
+    userRef.once("value").then(snapshot => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        score = data.score || 0;
+        scoreEl.innerText = score;
+      } else {
+        userRef.set({
+          username: user?.username || "",
+          score: 0,
+          joined: new Date().toISOString()
+        });
+      }
+    });
+
+    function increaseScore() {
+      score++;
+      scoreEl.innerText = score;
+      userRef.update({ score });
+    }
+
+    function loadLeaderboard() {
+      const list = document.getElementById("leaderList");
+      db.ref("users").orderByChild("score").limitToLast(10).once("value").then(snapshot => {
+        const users = [];
+        snapshot.forEach(child => {
+          users.push({ name: child.val().username || "@anon", score: child.val().score || 0 });
+        });
+        users.reverse();
+        list.innerHTML = users.map(u => `<div class='leader-item'>${u.name}: ${u.score} 💎</div>`).join('');
+      });
+    }
+
+    loadLeaderboard();
+  </script></body>
+</html>
