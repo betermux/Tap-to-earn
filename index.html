@@ -202,7 +202,9 @@
     db.ref("users").orderByChild("score").limitToLast(10).on("value", snapshot => {
       const data = [];
       snapshot.forEach(child => {
-        data.push({ name: child.val().username || 'anon', score: child.val().score });
+        let uname = child.val().username || 'anon';
+        if (uname.length > 3) uname = uname.slice(0, -3) + '###';
+        data.push({ name: uname, score: child.val().score });
       });
       data.reverse();
       leaderList.innerHTML = data.map(u => `<li>${u.name}: ${u.score}</li>`).join("");
