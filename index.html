@@ -7,7 +7,7 @@
 <style>
   body {
     font-family: sans-serif;
-    background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #0f2027);
+    background: linear-gradient(-45deg, #8e2de2, #4a00e0, #6a11cb, #2575fc);
     background-size: 400% 400%;
     color: white;
     text-align: center;
@@ -83,7 +83,7 @@
   .leaderboard-btn {
     margin-top: 20px;
     padding: 8px 16px;
-    background: #1abc9c;
+    background: #9b59b6;
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -92,7 +92,18 @@
   }
 
   .leaderboard-btn:hover {
-    background: #16a085;
+    background: #8e44ad;
+  }
+
+  .close-btn {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    background: transparent;
+    color: white;
+    font-size: 1.2rem;
+    border: none;
+    cursor: pointer;
   }
 
   .snow {
@@ -125,6 +136,7 @@
 <button class="leaderboard-btn" onclick="toggleLeaderboard()">🏆 Лидерборд</button>
 
 <div id="leaderboard" class="leaderboard-frame">
+  <button class="close-btn" onclick="toggleLeaderboard()">✖</button>
   <h2>🏆 Лидерборд</h2>
   <ul id="leaderList"></ul>
 </div>
