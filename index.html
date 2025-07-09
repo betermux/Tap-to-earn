@@ -12,12 +12,6 @@
   <!-- TonConnect UI -->
   <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
   <style>
-    * {
-      outline: none !important;
-      box-shadow: none !important;
-      -webkit-tap-highlight-color: transparent;
-    }
-
     body {
       font-family: sans-serif;
       background: linear-gradient(to bottom, #000000, #1a1a1a);
@@ -42,8 +36,6 @@
       border: none;
       cursor: pointer;
       outline: none;
-      box-shadow: none;
-      -webkit-tap-highlight-color: transparent;
     }
 
     .tap-button img {
@@ -53,6 +45,11 @@
 
     .tap-button:active img {
       transform: scale(0.95);
+    }
+
+    .tap-button:focus {
+      outline: none;
+      box-shadow: none;
     }
 
     #leaderboard {
@@ -80,6 +77,16 @@
       0% { transform: translateY(-10px); }
       100% { transform: translateY(100vh); }
     }
+
+    #ton-connect {
+      display: flex;
+      justify-content: center;
+      margin-top: 15px;
+    }
+
+    #walletAddress {
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -89,8 +96,10 @@
   <button class="tap-button" onclick="increaseScore()">
     <img src="https://i.ibb.co/20r26xLd/Picsart-25-07-08-22-39-08-704.png" alt="Tap">
   </button>
+
   <div id="ton-connect"></div>
   <p id="walletAddress">Wallet: Not connected</p>
+
   <div id="leaderboard">
     <h2>🏆 Leaderboard</h2>
     <ul id="leaderList"></ul>
@@ -157,7 +166,6 @@
       }
     }
 
-    // Energy refill every 6 seconds
     setInterval(() => {
       if (energy < maxEnergy) {
         energy += 1;
@@ -165,7 +173,6 @@
       }
     }, 6000);
 
-    // Leaderboard
     const leaderList = document.getElementById("leaderList");
     db.ref("users").orderByChild("score").limitToLast(10).on("value", snapshot => {
       const data = [];
@@ -176,7 +183,6 @@
       leaderList.innerHTML = data.map(u => `<li>${u.name}: ${u.score.toFixed(1)} ₮</li>`).join("");
     });
 
-    // TonConnect
     const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
       manifestUrl: 'https://tap-to-earn-five.vercel.app/tonconnect-manifest.json',
       buttonRootId: 'ton-connect'
