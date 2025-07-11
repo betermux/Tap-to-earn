@@ -1,235 +1,90 @@
-<!DOCTYPE html>
-<html lang="mn">
-<head>
-  <meta charset="UTF-8">
+<!DOCTYPE html><html lang="mn"><head>  <meta charset="UTF-8">
   <title>Tap to Earn MGL</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-
   <!-- Telegram WebApp JS -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
+  <!-- Pixel Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
-    *:focus {
-      outline: none !important;
-      box-shadow: none !important;
-    }
+    /* Reset focus visuals */
+    *:focus{outline:none!important;box-shadow:none!important;}/* Loading overlay */
+#loadingOverlay{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;}
+.spinner{width:60px;height:60px;border:6px solid #444;border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:20px;}
+#loadingText{font-family:'Press Start 2P',cursive;font-size:.75rem;letter-spacing:1px;}
+@keyframes spin{to{transform:rotate(360deg);}}
 
-    body {
-      font-family: sans-serif;
-      background: linear-gradient(-45deg, #1a2a6c, #b21f1f, #fdbb2d);
-      background-size: 600% 600%;
-      animation: gradientBG 15s ease infinite;
-      color: white;
-      text-align: center;
-      padding: 30px;
-      position: relative;
-      overflow: hidden;
-    }
+/* Main UI */
+body{font-family:sans-serif;background:black;color:white;text-align:center;padding:30px;position:relative;overflow:hidden;}
+h1{font-size:1.8rem;margin-bottom:10px;}
+#score,#energy{font-size:1.2rem;margin:10px 0;}
 
-    @keyframes gradientBG {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
+.tap-button{background:none;border:none;cursor:pointer;position:relative;z-index:2;-webkit-tap-highlight-color:transparent;}
+.tap-button img{width:160px;transition:transform .1s ease;}
+.tap-button:active img{transform:scale(.95);}
 
-    h1 {
-      font-size: 1.8rem;
-      margin-bottom: 10px;
-    }
+.emoji{position:fixed;font-size:20px;animation:fall linear infinite;opacity:.4;pointer-events:none;filter:blur(2px);z-index:0;}
+@keyframes fall{0%{transform:translateY(-10px);}100%{transform:translateY(100vh);}}
 
-    #score, #energy {
-      font-size: 1.2rem;
-      margin: 10px 0;
-    }
+#leaderboard-wrapper{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.8);width:90%;max-width:400px;padding:20px;background:rgba(0,0,0,.85);border-radius:15px;z-index:10;animation:slideUp .4s ease forwards;}
+@keyframes slideUp{0%{opacity:0;transform:translate(-50%,-40%) scale(.8);}100%{opacity:1;transform:translate(-50%,-50%) scale(1);}}
+@keyframes slideDown{0%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-40%) scale(.8);}}
+#leaderboard-wrapper h2{margin-bottom:10px;font-family:'Press Start 2P',cursive;}
+#leaderList{text-align:left;margin-top:10px;font-family:'Press Start 2P',cursive;font-size:.6rem;}
+.close-btn{position:absolute;top:10px;right:15px;font-size:1.2rem;cursor:pointer;background:none;color:white;border:none;}
 
-    .tap-button {
-      background: none;
-      border: none;
-      cursor: pointer;
-      position: relative;
-      z-index: 2;
-      outline: none;
-      -webkit-tap-highlight-color: transparent;
-    }
+.background-frame{position:fixed;inset:0;background:url('https://i.ibb.co/gMpT7db1/ba89bca8247729ea77324718f7c284c813a88c52.gif')center/cover no-repeat;z-index:-1;opacity:.15;}
 
-    .tap-button img {
-      width: 160px;
-      transition: transform 0.1s ease;
-    }
-
-    .tap-button:active img {
-      transform: scale(0.95);
-    }
-
-    .emoji {
-      position: fixed;
-      font-size: 20px;
-      animation: fall linear infinite;
-      opacity: 0.4;
-      pointer-events: none;
-      filter: blur(2px);
-      z-index: 0;
-    }
-
-    @keyframes fall {
-      0% { transform: translateY(-10px); }
-      100% { transform: translateY(100vh); }
-    }
-
-    #leaderboard-wrapper {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 90%;
-      max-width: 400px;
-      padding: 20px;
-      background: rgba(0, 0, 0, 0.85);
-      border-radius: 15px;
-      z-index: 10;
-      animation: slideUp 0.5s ease forwards;
-    }
-
-    @keyframes slideUp {
-      0% { opacity: 0; transform: translate(-50%, -40%); }
-      100% { opacity: 1; transform: translate(-50%, -50%); }
-    }
-
-    #leaderboard-wrapper h2 {
-      margin-bottom: 10px;
-    }
-
-    #leaderList {
-      text-align: left;
-      margin-top: 10px;
-    }
-
-    .close-btn {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      font-size: 1.2rem;
-      cursor: pointer;
-      background: none;
-      color: white;
-      border: none;
-    }
   </style>
 </head>
 <body>
-  <h1>Сайн байна уу, <span id="name">?</span>!</h1>
-  <p>Таны оноо: <span id="score">0</span></p>
-  <p>Энерги: <span id="energy">10</span></p>
+  <!-- Loading Screen -->
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <div id="loadingText">LOADING...</div>
+  </div>  <!-- Main App (hidden until load) -->  <div id="app" style="display:none;">
+    <div class="background-frame"></div>
+    <h1>Сайн байна уу, <span id="name">?</span>!</h1>
+    <p>Таны оноо: <span id="score">0</span></p>
+    <p>Энерги: <span id="energy">10</span></p>
+    <button class="tap-button" onclick="increaseScore()">
+      <img src="https://i.ibb.co/zhLx1sgc/1752059399737.png" alt="Tap">
+    </button>
+    <br><br>
+    <button onclick="showLeaderboard()" style="margin-top:20px;padding:10px 20px;border-radius:12px;border:none;background:#333;color:white;font-size:1rem;cursor:pointer;">🏆 Leaderboard</button>
+    <div id="leaderboard-wrapper">
+      <button class="close-btn" onclick="hideLeaderboard()">✖</button>
+      <h2>Leaderboard</h2>
+      <ul id="leaderList"></ul>
+    </div>
+  </div>  <!-- Falling Emojis -->  <script>for(let i=0;i<25;i++){const e=document.createElement('div');e.className='emoji';e.innerText='🍉';e.style.left=Math.random()*100+'vw';e.style.animationDuration=(Math.random()*3+4)+'s';e.style.top=-Math.random()*100+'px';e.style.fontSize=(Math.random()*10+16)+'px';document.body.appendChild(e);}</script>  <script>
+    const tg=window.Telegram?.WebApp;tg&&tg.expand();
+    const user=tg?.initDataUnsafe?.user||{};
+    const userId=user.id||'guest';const name=user.first_name||'User';document.getElementById('name').innerText=name;
 
-  <button class="tap-button" onclick="increaseScore()">
-    <img src="https://i.ibb.co/20r26xLd/Picsart-25-07-08-22-39-08-704.png" alt="Tap">
-  </button>
-
-  <br><br>
-  <button onclick="showLeaderboard()" style="margin-top:20px;padding:10px 20px;border-radius:12px;border:none;background:#333;color:white;font-size:1rem;cursor:pointer;">🏆 Leaderboard</button>
-
-  <div id="leaderboard-wrapper">
-    <button class="close-btn" onclick="hideLeaderboard()">✖</button>
-    <h2>Leaderboard</h2>
-    <ul id="leaderList"></ul>
-  </div>
-
-  <!-- Falling Watermelon Emoji -->
-  <script>
-    for (let i = 0; i < 25; i++) {
-      const emoji = document.createElement('div');
-      emoji.className = 'emoji';
-      emoji.innerText = '🍉';
-      emoji.style.left = Math.random() * 100 + 'vw';
-      emoji.style.animationDuration = (Math.random() * 3 + 4) + 's';
-      emoji.style.top = -Math.random() * 100 + 'px';
-      emoji.style.fontSize = (Math.random() * 10 + 16) + 'px';
-      document.body.appendChild(emoji);
-    }
-  </script>
-
-  <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-    const user = tg.initDataUnsafe.user;
-    const userId = user?.id || 'guest';
-    const name = user?.first_name || 'User';
-    document.getElementById("name").innerText = name;
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDiNaEW3K2TD-uZGHYP23YR_l-BZnEjtnE",
-      authDomain: "taptoearnmgl.firebaseapp.com",
-      databaseURL: "https://taptoearnmgl-default-rtdb.firebaseio.com",
-      projectId: "taptoearnmgl",
-      storageBucket: "taptoearnmgl.appspot.com",
-      messagingSenderId: "906125335650",
-      appId: "1:906125335650:web:b7388d16b15fdacba6053b",
-      measurementId: "G-433ZSKP5D6"
-    };
-
+    const firebaseConfig={apiKey:"AIzaSyDiNaEW3K2TD-uZGHYP23YR_l-BZnEjtnE",authDomain:"taptoearnmgl.firebaseapp.com",databaseURL:"https://taptoearnmgl-default-rtdb.firebaseio.com",projectId:"taptoearnmgl",storageBucket:"taptoearnmgl.appspot.com",messagingSenderId:"906125335650",appId:"1:906125335650:web:b7388d16b15fdacba6053b",measurementId:"G-433ZSKP5D6"};
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const scoreEl = document.getElementById("score");
-    const energyEl = document.getElementById("energy");
-    let score = 0;
-    let energy = 10;
-    const maxEnergy = 10;
-    const userRef = db.ref("users/" + userId);
+    const db=firebase.database();
+    const scoreEl=document.getElementById('score');const energyEl=document.getElementById('energy');
+    let score=0,energy=10,maxEnergy=10;
+    const userRef=db.ref('users/'+userId);
 
-    userRef.once("value").then(snapshot => {
-      if (snapshot.exists()) {
-        score = snapshot.val().score || 0;
-      } else {
-        userRef.set({ username: user?.username || '', score: 0, joined: new Date().toISOString() });
-      }
-      scoreEl.innerText = score;
+    userRef.once('value').then(snap=>{
+      if(snap.exists())score=snap.val().score||0;else userRef.set({username:user.username||'',score:0,joined:new Date().toISOString()});
+      scoreEl.innerText=score;
+      // hide loading
+      document.getElementById('loadingOverlay').style.display='none';
+      document.getElementById('app').style.display='block';
     });
 
-    function increaseScore() {
-      if (energy > 0) {
-        score += 1;
-        energy -= 1;
-        scoreEl.innerText = score;
-        energyEl.innerText = energy;
-        userRef.update({ score });
+    function increaseScore(){if(energy>0){score++;energy--;scoreEl.innerText=score;energyEl.innerText=energy;userRef.update({score});new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3').play().catch(()=>{});}}
+    setInterval(()=>{if(energy<maxEnergy){energy++;energyEl.innerText=energy;}},6000);
 
-        // ✅ pop sound
-        const audio = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
-        audio.play().catch(e => {});
-      }
-    }
+    function showLeaderboard(){const el=document.getElementById('leaderboard-wrapper');el.style.display='block';el.style.animation='slideUp .4s ease forwards';}
+    function hideLeaderboard(){const el=document.getElementById('leaderboard-wrapper');el.style.animation='slideDown .4s ease forwards';setTimeout(()=>{el.style.display='none';},400);}
 
-    setInterval(() => {
-      if (energy < maxEnergy) {
-        energy += 1;
-        energyEl.innerText = energy;
-      }
-    }, 6000);
-
-    function showLeaderboard() {
-      document.getElementById("leaderboard-wrapper").style.display = 'block';
-    }
-
-    function hideLeaderboard() {
-      document.getElementById("leaderboard-wrapper").style.display = 'none';
-    }
-
-    const leaderList = document.getElementById("leaderList");
-    db.ref("users").orderByChild("score").limitToLast(10).on("value", snapshot => {
-      const data = [];
-      snapshot.forEach(child => {
-        let uname = child.val().username || 'anon';
-        if (uname.length > 3) uname = uname.slice(0, -3) + '###';
-        data.push({ name: uname, score: child.val().score });
-      });
-      data.reverse();
-      leaderList.innerHTML = data.map(u => `<li>${u.name}: ${u.score}</li>`).join("");
-    });
-  </script>
-</body>
-</html>
+    const leaderList=document.getElementById('leaderList');
+    db.ref('users').orderByChild('score').limitToLast(10).on('value',s=>{const arr=[];s.forEach(c=>{let u=c.val().username||'anon';if(u.length>3)u=u.slice(0,-3)+'###';arr.push({name:u,score:c.val().score});});arr.reverse();leaderList.innerHTML=arr.map(i=>`<li>${i.name}: ${i.score}</li>`).join('');});
+  </script></body></html>
