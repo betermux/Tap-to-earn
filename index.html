@@ -1,147 +1,146 @@
-<!DOCTYPE html><html lang="mn"><head>
+<!DOCTYPE html>
+<html lang="mn">
+<head>
   <meta charset="UTF-8">
   <title>Tap to Earn MGL</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
   <!-- Telegram WebApp JS -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Pixel Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
   <style>
     *:focus {
       outline: none !important;
       box-shadow: none !important;
-    }body {
-  font-family: sans-serif;
-  background: black;
-  color: white;
-  text-align: center;
-  padding: 30px;
-  position: relative;
-  overflow: hidden;
-}
+    }
 
-h1 {
-  font-size: 1.8rem;
-  margin-bottom: 10px;
-}
+    body {
+      font-family: sans-serif;
+      background: linear-gradient(-45deg, #1a2a6c, #b21f1f, #fdbb2d);
+      background-size: 600% 600%;
+      animation: gradientBG 15s ease infinite;
+      color: white;
+      text-align: center;
+      padding: 30px;
+      position: relative;
+      overflow: hidden;
+    }
 
-#score, #energy {
-  font-size: 1.2rem;
-  margin: 10px 0;
-}
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
 
-.tap-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  position: relative;
-  z-index: 2;
-  outline: none;
-  -webkit-tap-highlight-color: transparent;
-}
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+    }
 
-.tap-button img {
-  width: 160px;
-  transition: transform 0.1s ease;
-}
+    #score, #energy {
+      font-size: 1.2rem;
+      margin: 10px 0;
+    }
 
-.tap-button:active img {
-  transform: scale(0.95);
-}
+    .tap-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      z-index: 2;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-.emoji {
-  position: fixed;
-  font-size: 20px;
-  animation: fall linear infinite;
-  opacity: 0.4;
-  pointer-events: none;
-  filter: blur(2px);
-  z-index: 0;
-}
+    .tap-button img {
+      width: 160px;
+      transition: transform 0.1s ease;
+    }
 
-@keyframes fall {
-  0% { transform: translateY(-10px); }
-  100% { transform: translateY(100vh); }
-}
+    .tap-button:active img {
+      transform: scale(0.95);
+    }
 
-#leaderboard-wrapper {
-  display: none;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0.8);
-  width: 90%;
-  max-width: 400px;
-  padding: 20px;
-  background: rgba(0, 0, 0, 0.85);
-  border-radius: 15px;
-  z-index: 10;
-  animation: slideUp 0.4s ease forwards;
-}
+    .emoji {
+      position: fixed;
+      font-size: 20px;
+      animation: fall linear infinite;
+      opacity: 0.4;
+      pointer-events: none;
+      filter: blur(2px);
+      z-index: 0;
+    }
 
-@keyframes slideUp {
-  0% { opacity: 0; transform: translate(-50%, -40%) scale(0.8); }
-  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-}
+    @keyframes fall {
+      0% { transform: translateY(-10px); }
+      100% { transform: translateY(100vh); }
+    }
 
-@keyframes slideDown {
-  0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  100% { opacity: 0; transform: translate(-50%, -40%) scale(0.8); }
-}
+    #leaderboard-wrapper {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90%;
+      max-width: 400px;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.85);
+      border-radius: 15px;
+      z-index: 10;
+      animation: slideUp 0.5s ease forwards;
+    }
 
-#leaderboard-wrapper h2 {
-  margin-bottom: 10px;
-  font-family: 'Press Start 2P', cursive;
-}
+    @keyframes slideUp {
+      0% { opacity: 0; transform: translate(-50%, -40%); }
+      100% { opacity: 1; transform: translate(-50%, -50%); }
+    }
 
-#leaderList {
-  text-align: left;
-  margin-top: 10px;
-  font-family: 'Press Start 2P', cursive;
-  font-size: 0.6rem;
-}
+    #leaderboard-wrapper h2 {
+      margin-bottom: 10px;
+    }
 
-.close-btn {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  font-size: 1.2rem;
-  cursor: pointer;
-  background: none;
-  color: white;
-  border: none;
-}
+    #leaderList {
+      text-align: left;
+      margin-top: 10px;
+    }
 
-.background-frame {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: url('https://i.ibb.co/gMpT7db1/ba89bca8247729ea77324718f7c284c813a88c52.gif') center center / cover no-repeat;
-  z-index: -1;
-  opacity: 0.15;
-}
-
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      background: none;
+      color: white;
+      border: none;
+    }
   </style>
 </head>
 <body>
-  <div class="background-frame"></div>
   <h1>Сайн байна уу, <span id="name">?</span>!</h1>
   <p>Таны оноо: <span id="score">0</span></p>
   <p>Энерги: <span id="energy">10</span></p>
+
   <button class="tap-button" onclick="increaseScore()">
-    <img src="https://i.ibb.co/zhLx1sgc/1752059399737.png" alt="Tap">
+    <img src="https://i.ibb.co/20r26xLd/Picsart-25-07-08-22-39-08-704.png" alt="Tap">
   </button>
+
   <br><br>
-  <button onclick="showLeaderboard()" style="margin-top:20px;padding:10px 20px;border-radius:12px;border:none;background:#333;color:white;font-size:1rem;cursor:pointer;">🏆 Leaderboard</button>  <div id="leaderboard-wrapper">
+  <button onclick="showLeaderboard()" style="margin-top:20px;padding:10px 20px;border-radius:12px;border:none;background:#333;color:white;font-size:1rem;cursor:pointer;">🏆 Leaderboard</button>
+
+  <div id="leaderboard-wrapper">
     <button class="close-btn" onclick="hideLeaderboard()">✖</button>
     <h2>Leaderboard</h2>
     <ul id="leaderList"></ul>
-  </div>  <script>
+  </div>
+
+  <!-- Falling Watermelon Emoji -->
+  <script>
     for (let i = 0; i < 25; i++) {
       const emoji = document.createElement('div');
       emoji.className = 'emoji';
@@ -152,7 +151,9 @@ h1 {
       emoji.style.fontSize = (Math.random() * 10 + 16) + 'px';
       document.body.appendChild(emoji);
     }
-  </script>  <script>
+  </script>
+
+  <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
     const user = tg.initDataUnsafe.user;
@@ -196,6 +197,8 @@ h1 {
         scoreEl.innerText = score;
         energyEl.innerText = energy;
         userRef.update({ score });
+
+        // ✅ pop sound
         const audio = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
         audio.play().catch(e => {});
       }
@@ -209,17 +212,11 @@ h1 {
     }, 6000);
 
     function showLeaderboard() {
-      const el = document.getElementById("leaderboard-wrapper");
-      el.style.display = 'block';
-      el.style.animation = 'slideUp 0.4s ease forwards';
+      document.getElementById("leaderboard-wrapper").style.display = 'block';
     }
 
     function hideLeaderboard() {
-      const el = document.getElementById("leaderboard-wrapper");
-      el.style.animation = 'slideDown 0.4s ease forwards';
-      setTimeout(() => {
-        el.style.display = 'none';
-      }, 400);
+      document.getElementById("leaderboard-wrapper").style.display = 'none';
     }
 
     const leaderList = document.getElementById("leaderList");
@@ -233,5 +230,6 @@ h1 {
       data.reverse();
       leaderList.innerHTML = data.map(u => `<li>${u.name}: ${u.score}</li>`).join("");
     });
-  </script></body>
+  </script>
+</body>
 </html>
