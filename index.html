@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>CS Bomb Simulator – fixed beeps</title>
+<title>CS Bomb Simulator – final merged</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
   :root{font-family:system-ui,sans-serif}
@@ -23,42 +23,39 @@
   <button id="defuseButton" disabled>Hold to Defuse (CT)</button>
 
 <script>
-/* ------------------------------------------------------------------ */
-/* 1️⃣  Нэг л AudioContext үүсгээд бүхнийг түүнд найдна               */
-/* ------------------------------------------------------------------ */
+/* ============= 1. Нэг AudioContext, дуугаа урьдчилж буулгах ============= */
 const ctx = new (window.AudioContext || window.webkitAudioContext)();
 
-/* ----------------- SFX – урьдчилж татаж буулгаад RAM-д ------------ */
-const SOUND_SRC = {
+const SOUND_SRC = {        // өөрийн MP3-ийн нэр эсвэл URL оруулна
   planted:   'planted.mp3',
   defused:   'defused.mp3',
   ctWin:     'ct_win.mp3',
-  explosion: 'explosion.mp3',
-  tWin:      't_win.mp3'
+  explosion: 'explosion.mp3'   // богино “boom”
 };
-const SFX = {};                        // {name: AudioBuffer}
+
+const SFX = {};  // {key: AudioBuffer}
 
 async function loadAll() {
-  await Promise.all(Object.entries(SOUND_SRC).map(async ([key,url])=>{
-    const buf = await (await fetch(url)).arrayBuffer();
-    SFX[key]  = await ctx.decodeAudioData(buf);
+  await Promise.all(Object.entries(SOUND_SRC).map(async ([k,u])=>{
+    const ab = await (await fetch(u)).arrayBuffer();
+    SFX[k]   = await ctx.decodeAudioData(ab);
   }));
 }
 
-/* ----------------- тоглуулах туслах ------------------------------ */
-function play(name, opts={}) {
-  const buffer = SFX[name];
-  if(!buffer) return;
-  const src   = ctx.createBufferSource();
-  const gain  = ctx.createGain();
-  gain.gain.value = opts.volume ?? 1;
-  src.buffer = buffer;
+/* ============= 2. Тоглуулах туслах ============= */
+function play(name, {volume=1, when=0}={}) {
+  const buf = SFX[name];
+  if (!buf) return;
+  const src  = ctx.createBufferSource();
+  const gain = ctx.createGain();
+  gain.gain.value = volume;
+  src.buffer = buf;
   src.connect(gain).connect(ctx.destination);
-  src.start(ctx.currentTime + (opts.when ?? 0));
+  src.start(ctx.currentTime + when);
 }
 
-/* ----------------- beep (0.08 s) – context дахин үүсгэхгүй -------- */
-function shortBeep(freq=1000, vol=0.12, dur=0.08){
+/* 0.08 s beep – context дахин үүсгэхгүй */
+function shortBeep(freq=1000, vol=0.12, dur=0.08) {
   const osc  = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.frequency.value = freq;
@@ -68,18 +65,14 @@ function shortBeep(freq=1000, vol=0.12, dur=0.08){
   osc.stop(ctx.currentTime + dur);
 }
 
-/* ----------------- UI & state ------------------------------------ */
+/* ============= 3. UI, төлөв ============= */
 const plantBtn  = document.getElementById('plantButton');
 const defuseBtn = document.getElementById('defuseButton');
 const display   = document.getElementById('display');
 
 let planted=false, secondsLeft=40, timerId=null, holdId=null;
 
-/* бүрэн ачаалтал товчнуудыг disable байлгана */
-plantBtn.disabled = defuseBtn.disabled = true;
-loadAll().then(()=> plantBtn.disabled=false);
-
-/* товчийг 5 сек дарах логик */
+/* товч 5 сек дарах логик */
 function addHold(btn, action){
   const start = e=>{
     e.preventDefault();
@@ -93,7 +86,7 @@ function addHold(btn, action){
     .forEach(ev=>btn.addEventListener(ev,cancel));
 }
 
-/* ----------------- plant / defuse / explode ---------------------- */
+/* ============= 4. Plant / Defuse / Explode ============= */
 function plantBomb(){
   planted=true;
   play('planted');
@@ -103,11 +96,10 @@ function plantBomb(){
   display.textContent='40';
   timerId=setInterval(()=>{
     secondsLeft--;
-    /* beep: <10 сек үед яаралтай higher pitch, <5 сек үед бүр өндөр */
+    /* pitch өндөрсөх логик */
     const f = secondsLeft<=5 ? 1800 : secondsLeft<=10 ? 1400 : 1000;
     shortBeep(f);
     display.textContent=secondsLeft.toString().padStart(2,'0');
-
     if(secondsLeft<=0) explode();
   },1000);
 }
@@ -124,10 +116,10 @@ function defuseBomb(){
 function explode(){
   clearInterval(timerId);
   planted=false;
-  play('explosion');       // шууд тоглоно
-  play('tWin',{when:0.8});
+  play('explosion');          // зөвхөн “boom”
+  if (navigator.vibrate) navigator.vibrate(1000); // 1 сек vibrate
   display.textContent='BOOM!';
-  resetAfter(3500);
+  resetAfter(1500);
 }
 
 function resetAfter(ms){
@@ -138,7 +130,9 @@ function resetAfter(ms){
   },ms);
 }
 
-/* ----------------- init ------------------------------------------ */
+/* ============= 5. Init ============= */
+plantBtn.disabled = defuseBtn.disabled = true;
+loadAll().then(()=> plantBtn.disabled=false);
 addHold(plantBtn, plantBomb);
 addHold(defuseBtn, defuseBomb);
 </script>
