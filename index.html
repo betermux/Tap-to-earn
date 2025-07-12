@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>CS Bomb Simulator – 3D bomb (local)</title>
+<title>CS Bomb Simulator – 3D bomb + fixed hold</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
   :root{font-family:system-ui,sans-serif}
@@ -32,15 +32,17 @@
   <h1>CS Bomb Simulator</h1>
   <div id="display">Hold to PLANT</div>
 
-  <!-- Plant (локал PNG) -->
+  <!-- Plant (realistic bomb PNG) -->
   <button id="plantButton" class="img-btn" disabled>
-    <img class="icon" src="bomb.png" alt="Bomb">
+    <img class="icon"
+         src="https://cdn.pixabay.com/photo/2014/04/02/10/27/bomb-304849_1280.png"
+         alt="Bomb">
     <svg class="progress-ring" viewBox="0 0 160 160">
       <circle cx="80" cy="80" r="64"></circle>
     </svg>
   </button>
 
-  <!-- Defuse (гадаад PNG хэвээр) -->
+  <!-- Defuse (wire-cutter 3-D-ish PNG) -->
   <button id="defuseButton" class="img-btn" disabled>
     <img class="icon"
          src="https://cdn.pixabay.com/photo/2013/07/12/16/31/wire-cutter-151060_1280.png"
