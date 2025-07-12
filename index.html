@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>CS Bomb Simulator – 3D bomb + fixed hold</title>
+<title>CS Bomb Simulator – final fixed</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
   :root{font-family:system-ui,sans-serif}
@@ -11,16 +11,17 @@
 
   #display{font-size:3rem;margin:1rem 0;letter-spacing:2px}
 
-  /* ─── IMAGE BUTTON ─── */
-  .img-btn{position:relative;width:140px;height:140px;padding:0;border:none;
+  /* ─────────── IMAGE BUTTON ─────────── */
+  .img-btn{position:relative;width:120px;height:120px;padding:0;border:none;
            background:none;cursor:pointer;transition:transform .15s ease}
-  .img-btn:disabled{opacity:.35;cursor:not-allowed}
-  .img-btn.pressed{transform:scale(.9)}          /* pop шахалт */
+  .img-btn:disabled{opacity:.3;cursor:not-allowed}
+  .img-btn.pressed{transform:scale(.9)}          /* pop-шахалт */
 
-  .icon{width:100%;height:100%;object-fit:contain;pointer-events:none}
+  /* ─────────── INLINE ICON STYLE ─────────── */
+  .icon{width:100%;height:100%;pointer-events:none}
 
-  /* ─── PROGRESS RING ─── */
-  .progress-ring{position:absolute;top:-10px;left:-10px;width:160px;height:160px;
+  /* ─────────── PROGRESS RING ─────────── */
+  .progress-ring{position:absolute;top:-10px;left:-10px;width:140px;height:140px;
                  transform:rotate(-90deg);pointer-events:none}
   .progress-ring circle{stroke:#44ff44;stroke-width:8;fill:none;
                         stroke-dasharray:402.12;stroke-dashoffset:402.12}
@@ -32,98 +33,114 @@
   <h1>CS Bomb Simulator</h1>
   <div id="display">Hold to PLANT</div>
 
-  <!-- Plant (realistic bomb PNG) -->
+  <!-- Plant (bomb) -->
   <button id="plantButton" class="img-btn" disabled>
-    <img class="icon"
-         src="https://cdn.pixabay.com/photo/2014/04/02/10/27/bomb-304849_1280.png"
-         alt="Bomb">
-    <svg class="progress-ring" viewBox="0 0 160 160">
-      <circle cx="80" cy="80" r="64"></circle>
+    <svg viewBox="0 0 100 100" class="icon" aria-label="bomb">
+      <circle cx="50" cy="55" r="30" fill="#d32f2f"/>
+      <rect  x="44" y="15" width="12" height="18" rx="2" fill="#555"/>
+      <path  d="M50 15 v-8" stroke="#ffeb3b" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+
+    <!-- ✅ FIXED progress ring -->
+    <svg class="progress-ring" viewBox="0 0 140 140">
+      <circle cx="70" cy="70" r="64"></circle>
     </svg>
   </button>
 
-  <!-- Defuse (wire-cutter 3-D-ish PNG) -->
+  <!-- Defuse (wire-cutter) -->
   <button id="defuseButton" class="img-btn" disabled>
-    <img class="icon"
-         src="https://cdn.pixabay.com/photo/2013/07/12/16/31/wire-cutter-151060_1280.png"
-         alt="Wire cutter">
-    <svg class="progress-ring" viewBox="0 0 160 160">
-      <circle cx="80" cy="80" r="64"></circle>
+    <svg viewBox="0 0 100 100" class="icon" aria-label="cutter">
+      <path d="M50 15 L70 35 L60 45 L50 35 L40 45 L30 35 Z" fill="#1976d2"/>
+      <path d="M50 35 L50 85" stroke="#1976d2" stroke-width="12" stroke-linecap="round"/>
+    </svg>
+
+    <!-- ✅ FIXED progress ring -->
+    <svg class="progress-ring" viewBox="0 0 140 140">
+      <circle cx="70" cy="70" r="64"></circle>
     </svg>
   </button>
 
 <script>
-/* ========= 1. AudioContext & preload ========= */
+/* ============= 1. Single AudioContext & preload sounds ============= */
 const ctx = new (window.AudioContext||window.webkitAudioContext)();
-const SOUND = {planted:'planted.mp3',defused:'defused.mp3',
-               ctWin:'ct_win.mp3',explosion:'explosion.mp3'};
-const BUF = {};
+const SOUND_SRC = {planted:'planted.mp3',defused:'defused.mp3',
+                   ctWin:'ct_win.mp3',explosion:'explosion.mp3'};
+const SFX = {};
 async function loadAll(){
-  await Promise.all(Object.entries(SOUND).map(async([k,u])=>{
-    const b=await(await fetch(u)).arrayBuffer();
-    BUF[k]=await ctx.decodeAudioData(b);
+  await Promise.all(Object.entries(SOUND_SRC).map(async([k,u])=>{
+    const buf = await (await fetch(u)).arrayBuffer();
+    SFX[k] = await ctx.decodeAudioData(buf);
   }));
 }
 
-/* ========= 2. Helpers ========= */
-function play(n,{vol=1,when=0}={}){
-  const b=BUF[n]; if(!b) return;
-  const s=ctx.createBufferSource(), g=ctx.createGain();
-  g.gain.value=vol; s.buffer=b;
-  s.connect(g).connect(ctx.destination);
-  s.start(ctx.currentTime+when);
+/* ============= 2. Helpers ============= */
+function play(name,{volume=1,when=0}={}){
+  const b=SFX[name]; if(!b) return;
+  const src=ctx.createBufferSource(), g=ctx.createGain();
+  g.gain.value=volume; src.buffer=b;
+  src.connect(g).connect(ctx.destination);
+  src.start(ctx.currentTime+when);
 }
 function beep(f=1000,v=0.12,d=0.08){
   const o=ctx.createOscillator(), g=ctx.createGain();
   o.frequency.value=f; g.gain.value=v;
-  o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime+d);
+  o.connect(g).connect(ctx.destination); o.start();
+  o.stop(ctx.currentTime+d);
 }
 
-/* ========= 3. UI & state ========= */
-const plantBtn=document.getElementById('plantButton');
-const defuseBtn=document.getElementById('defuseButton');
-const display=document.getElementById('display');
-let planted=false, secs=40, tick=null, holdTimer=null;
+/* ============= 3. UI & state ============= */
+const plantBtn  = document.getElementById('plantButton');
+const defuseBtn = document.getElementById('defuseButton');
+const display   = document.getElementById('display');
 
-/* Unified pointer-hold logic */
+let planted=false, seconds=40, timer=null, hold=null;
+
+/* Дарж байх үед: .pressed + .loading  */
 function addHold(btn, action){
   const start=e=>{
-    if(btn.disabled) return;
+    e.preventDefault();
+    if(hold|| (planted&&btn===plantBtn)) return;
     btn.classList.add('pressed','loading');
-    holdTimer=setTimeout(()=>{action();stop();},5000);
+    hold=setTimeout(()=>{action();stopHold(btn)},5000);
   };
-  const stop=()=>{
-    clearTimeout(holdTimer); holdTimer=null;
-    btn.classList.remove('pressed','loading');
-    const c=btn.querySelector('circle');
+  function stopHold(b){
+    clearTimeout(hold); hold=null;
+    b.classList.remove('pressed','loading');
+    /* ring reset */
+    const c=b.querySelector('circle');
     c.style.animation='none'; void c.offsetWidth; c.style.animation='';
-  };
-  btn.addEventListener('pointerdown',start);
-  ['pointerup','pointercancel','pointerleave'].forEach(ev=>btn.addEventListener(ev,stop));
+  }
+  const cancel=()=>stopHold(btn);
+
+  btn.addEventListener('mousedown',start);
+  btn.addEventListener('touchstart',start,{passive:false});
+  ['mouseup','mouseleave','touchend','touchcancel']
+    .forEach(ev=>btn.addEventListener(ev,cancel));
 }
 
-/* ========= 4. Actions ========= */
+/* ============= 4. Actions ============= */
 function plant(){
   planted=true; play('planted');
   plantBtn.disabled=true; defuseBtn.disabled=false;
-  secs=40; display.textContent='40';
-  tick=setInterval(()=>{
-    secs--;
-    beep(secs<=5?1800:secs<=10?1400:1000);
-    display.textContent=secs.toString().padStart(2,'0');
-    if(secs<=0) explode();
+  seconds=40; display.textContent='40';
+  timer=setInterval(()=>{
+    seconds--;
+    const f=seconds<=5?1800:seconds<=10?1400:1000;
+    beep(f);
+    display.textContent=seconds.toString().padStart(2,'0');
+    if(seconds<=0) explode();
   },1000);
 }
 function defuse(){
   if(!planted) return;
-  clearInterval(tick); planted=false;
+  clearInterval(timer); planted=false;
   play('defused'); play('ctWin',{when:1.4});
   reset(3000);
 }
 function explode(){
-  clearInterval(tick); planted=false;
+  clearInterval(timer); planted=false;
   play('explosion');
-  navigator.vibrate?.(1000);
+  if(navigator.vibrate) navigator.vibrate(1000);
   display.textContent='BOOM!';
   reset(1500);
 }
@@ -134,9 +151,9 @@ function reset(ms){
   },ms);
 }
 
-/* ========= 5. Init ========= */
-plantBtn.disabled=defuseBtn.disabled=true;
-loadAll().then(()=>plantBtn.disabled=false);
+/* ============= 5. Init ============= */
+plantBtn.disabled = defuseBtn.disabled = true;
+loadAll().then(()=> plantBtn.disabled=false);
 addHold(plantBtn,plant);
 addHold(defuseBtn,defuse);
 </script>
