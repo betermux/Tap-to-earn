@@ -1,161 +1,135 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>CS Bomb Simulator – final fixed</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-  :root{font-family:system-ui,sans-serif}
-  body{margin:0;height:100vh;display:flex;flex-direction:column;
-       justify-content:center;align-items:center;background:#111;color:#0f0}
-
-  #display{font-size:3rem;margin:1rem 0;letter-spacing:2px}
-
-  /* ─────────── IMAGE BUTTON ─────────── */
-  .img-btn{position:relative;width:120px;height:120px;padding:0;border:none;
-           background:none;cursor:pointer;transition:transform .15s ease}
-  .img-btn:disabled{opacity:.3;cursor:not-allowed}
-  .img-btn.pressed{transform:scale(.9)}          /* pop-шахалт */
-
-  /* ─────────── INLINE ICON STYLE ─────────── */
-  .icon{width:100%;height:100%;pointer-events:none}
-
-  /* ─────────── PROGRESS RING ─────────── */
-  .progress-ring{position:absolute;top:-10px;left:-10px;width:140px;height:140px;
-                 transform:rotate(-90deg);pointer-events:none}
-  .progress-ring circle{stroke:#44ff44;stroke-width:8;fill:none;
-                        stroke-dasharray:402.12;stroke-dashoffset:402.12}
-  .loading .progress-ring circle{animation:progress 5s linear forwards}
-  @keyframes progress{to{stroke-dashoffset:0}}
-</style>
+  <meta charset="UTF-8">
+  <title>Fruit Slice Game</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; font-family: sans-serif; background: #222; color: white; }
+    canvas { display: block; background: linear-gradient(#111, #333); }
+    #scoreboard {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 20px;
+      z-index: 10;
+    }
+  </style>
 </head>
 <body>
-  <h1>CS Bomb Simulator</h1>
-  <div id="display">Hold to PLANT</div>
+  <div id="scoreboard">Score: 0 | Lives: 3</div>
+  <canvas id="gameCanvas"></canvas>
 
-  <!-- Plant (bomb) -->
-  <button id="plantButton" class="img-btn" disabled>
-    <svg viewBox="0 0 100 100" class="icon" aria-label="bomb">
-      <circle cx="50" cy="55" r="30" fill="#d32f2f"/>
-      <rect  x="44" y="15" width="12" height="18" rx="2" fill="#555"/>
-      <path  d="M50 15 v-8" stroke="#ffeb3b" stroke-width="4" stroke-linecap="round"/>
-    </svg>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    <!-- ✅ FIXED progress ring -->
-    <svg class="progress-ring" viewBox="0 0 140 140">
-      <circle cx="70" cy="70" r="64"></circle>
-    </svg>
-  </button>
+    let score = 0;
+    let lives = 3;
+    const fruits = [];
+    const slicedFruits = [];
+    const fruitColors = ["red", "orange", "yellow", "green", "purple"];
+    const scoreboard = document.getElementById("scoreboard");
 
-  <!-- Defuse (wire-cutter) -->
-  <button id="defuseButton" class="img-btn" disabled>
-    <svg viewBox="0 0 100 100" class="icon" aria-label="cutter">
-      <path d="M50 15 L70 35 L60 45 L50 35 L40 45 L30 35 Z" fill="#1976d2"/>
-      <path d="M50 35 L50 85" stroke="#1976d2" stroke-width="12" stroke-linecap="round"/>
-    </svg>
+    class Fruit {
+      constructor(x, y, radius, vx, vy, color) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+        this.vx = vx;
+        this.vy = vy;
+        this.gravity = 0.5;
+        this.color = color;
+        this.sliced = false;
+      }
 
-    <!-- ✅ FIXED progress ring -->
-    <svg class="progress-ring" viewBox="0 0 140 140">
-      <circle cx="70" cy="70" r="64"></circle>
-    </svg>
-  </button>
+      update() {
+        this.vy += this.gravity;
+        this.x += this.vx;
+        this.y += this.vy;
+      }
 
-<script>
-/* ============= 1. Single AudioContext & preload sounds ============= */
-const ctx = new (window.AudioContext||window.webkitAudioContext)();
-const SOUND_SRC = {planted:'planted.mp3',defused:'defused.mp3',
-                   ctWin:'ct_win.mp3',explosion:'explosion.mp3'};
-const SFX = {};
-async function loadAll(){
-  await Promise.all(Object.entries(SOUND_SRC).map(async([k,u])=>{
-    const buf = await (await fetch(u)).arrayBuffer();
-    SFX[k] = await ctx.decodeAudioData(buf);
-  }));
-}
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.closePath();
+      }
+    }
 
-/* ============= 2. Helpers ============= */
-function play(name,{volume=1,when=0}={}){
-  const b=SFX[name]; if(!b) return;
-  const src=ctx.createBufferSource(), g=ctx.createGain();
-  g.gain.value=volume; src.buffer=b;
-  src.connect(g).connect(ctx.destination);
-  src.start(ctx.currentTime+when);
-}
-function beep(f=1000,v=0.12,d=0.08){
-  const o=ctx.createOscillator(), g=ctx.createGain();
-  o.frequency.value=f; g.gain.value=v;
-  o.connect(g).connect(ctx.destination); o.start();
-  o.stop(ctx.currentTime+d);
-}
+    function spawnFruit() {
+      const x = Math.random() * canvas.width;
+      const y = canvas.height + 60;
+      const vx = (Math.random() - 0.5) * 10;
+      const vy = -15 - Math.random() * 10;
+      const radius = 30 + Math.random() * 10;
+      const color = fruitColors[Math.floor(Math.random() * fruitColors.length)];
+      fruits.push(new Fruit(x, y, radius, vx, vy, color));
+    }
 
-/* ============= 3. UI & state ============= */
-const plantBtn  = document.getElementById('plantButton');
-const defuseBtn = document.getElementById('defuseButton');
-const display   = document.getElementById('display');
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let fruit of fruits) {
+        fruit.draw();
+      }
 
-let planted=false, seconds=40, timer=null, hold=null;
+      for (let f of slicedFruits) {
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, f.radius / 2, 0, Math.PI * 2);
+        ctx.fillStyle = "#fff";
+        ctx.fill();
+        ctx.closePath();
+      }
+    }
 
-/* Дарж байх үед: .pressed + .loading  */
-function addHold(btn, action){
-  const start=e=>{
-    e.preventDefault();
-    if(hold|| (planted&&btn===plantBtn)) return;
-    btn.classList.add('pressed','loading');
-    hold=setTimeout(()=>{action();stopHold(btn)},5000);
-  };
-  function stopHold(b){
-    clearTimeout(hold); hold=null;
-    b.classList.remove('pressed','loading');
-    /* ring reset */
-    const c=b.querySelector('circle');
-    c.style.animation='none'; void c.offsetWidth; c.style.animation='';
-  }
-  const cancel=()=>stopHold(btn);
+    function update() {
+      for (let i = fruits.length - 1; i >= 0; i--) {
+        const fruit = fruits[i];
+        fruit.update();
 
-  btn.addEventListener('mousedown',start);
-  btn.addEventListener('touchstart',start,{passive:false});
-  ['mouseup','mouseleave','touchend','touchcancel']
-    .forEach(ev=>btn.addEventListener(ev,cancel));
-}
+        if (fruit.y > canvas.height + 50) {
+          fruits.splice(i, 1);
+          if (!fruit.sliced) {
+            lives--;
+            if (lives <= 0) {
+              alert("Game Over! Final Score: " + score);
+              location.reload();
+            }
+          }
+        }
+      }
+    }
 
-/* ============= 4. Actions ============= */
-function plant(){
-  planted=true; play('planted');
-  plantBtn.disabled=true; defuseBtn.disabled=false;
-  seconds=40; display.textContent='40';
-  timer=setInterval(()=>{
-    seconds--;
-    const f=seconds<=5?1800:seconds<=10?1400:1000;
-    beep(f);
-    display.textContent=seconds.toString().padStart(2,'0');
-    if(seconds<=0) explode();
-  },1000);
-}
-function defuse(){
-  if(!planted) return;
-  clearInterval(timer); planted=false;
-  play('defused'); play('ctWin',{when:1.4});
-  reset(3000);
-}
-function explode(){
-  clearInterval(timer); planted=false;
-  play('explosion');
-  if(navigator.vibrate) navigator.vibrate(1000);
-  display.textContent='BOOM!';
-  reset(1500);
-}
-function reset(ms){
-  setTimeout(()=>{
-    plantBtn.disabled=false; defuseBtn.disabled=true;
-    display.textContent='Hold to PLANT';
-  },ms);
-}
+    canvas.addEventListener("mousemove", (e) => {
+      const mx = e.clientX;
+      const my = e.clientY;
 
-/* ============= 5. Init ============= */
-plantBtn.disabled = defuseBtn.disabled = true;
-loadAll().then(()=> plantBtn.disabled=false);
-addHold(plantBtn,plant);
-addHold(defuseBtn,defuse);
-</script>
+      for (let i = fruits.length - 1; i >= 0; i--) {
+        const fruit = fruits[i];
+        const dx = fruit.x - mx;
+        const dy = fruit.y - my;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < fruit.radius && !fruit.sliced) {
+          fruit.sliced = true;
+          slicedFruits.push({ x: fruit.x, y: fruit.y, radius: fruit.radius });
+          fruits.splice(i, 1);
+          score += 10;
+        }
+      }
+    });
+
+    function gameLoop() {
+      update();
+      draw();
+      scoreboard.textContent = `Score: ${score} | Lives: ${lives}`;
+      requestAnimationFrame(gameLoop);
+    }
+
+    setInterval(spawnFruit, 1000);
+    gameLoop();
+  </script>
 </body>
 </html>
