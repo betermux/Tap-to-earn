@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Fruit Slice Game</title>
+  <title>Fruit Slice Game with Images</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { height: 100%; overflow: hidden; font-family: sans-serif; background: #222; color: white; }
-    canvas { display: block; background: linear-gradient(#111, #333); }
+    html, body { height: 100%; overflow: hidden; background: #111; color: white; font-family: sans-serif; }
+    canvas { display: block; }
     #scoreboard {
       position: absolute;
       top: 10px;
@@ -30,18 +30,32 @@
     let lives = 3;
     const fruits = [];
     const slicedFruits = [];
-    const fruitColors = ["red", "orange", "yellow", "green", "purple"];
-    const scoreboard = document.getElementById("scoreboard");
+
+    const fruitImages = [
+      "apple.png",
+      "banana.png",
+      "orange.png",
+      "watermelon.png",
+      "grape.png"
+    ];
+
+    function loadImage(src) {
+      const img = new Image();
+      img.src = src;
+      return img;
+    }
+
+    const loadedImages = fruitImages.map(src => loadImage(src));
 
     class Fruit {
-      constructor(x, y, radius, vx, vy, color) {
+      constructor(x, y, radius, vx, vy, image) {
         this.x = x;
         this.y = y;
         this.radius = radius;
         this.vx = vx;
         this.vy = vy;
         this.gravity = 0.5;
-        this.color = color;
+        this.image = image;
         this.sliced = false;
       }
 
@@ -52,11 +66,7 @@
       }
 
       draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.fill();
-        ctx.closePath();
+        ctx.drawImage(this.image, this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
       }
     }
 
@@ -65,23 +75,15 @@
       const y = canvas.height + 60;
       const vx = (Math.random() - 0.5) * 10;
       const vy = -15 - Math.random() * 10;
-      const radius = 30 + Math.random() * 10;
-      const color = fruitColors[Math.floor(Math.random() * fruitColors.length)];
-      fruits.push(new Fruit(x, y, radius, vx, vy, color));
+      const radius = 40;
+      const img = loadedImages[Math.floor(Math.random() * loadedImages.length)];
+      fruits.push(new Fruit(x, y, radius, vx, vy, img));
     }
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       for (let fruit of fruits) {
         fruit.draw();
-      }
-
-      for (let f of slicedFruits) {
-        ctx.beginPath();
-        ctx.arc(f.x, f.y, f.radius / 2, 0, Math.PI * 2);
-        ctx.fillStyle = "#fff";
-        ctx.fill();
-        ctx.closePath();
       }
     }
 
@@ -114,7 +116,6 @@
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < fruit.radius && !fruit.sliced) {
           fruit.sliced = true;
-          slicedFruits.push({ x: fruit.x, y: fruit.y, radius: fruit.radius });
           fruits.splice(i, 1);
           score += 10;
         }
@@ -124,7 +125,7 @@
     function gameLoop() {
       update();
       draw();
-      scoreboard.textContent = `Score: ${score} | Lives: ${lives}`;
+      document.getElementById("scoreboard").textContent = `Score: ${score} | Lives: ${lives}`;
       requestAnimationFrame(gameLoop);
     }
 
