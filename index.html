@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="mn">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fruit Slice тоглоом</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -12,7 +12,7 @@
       margin: 0;
       height: 100vh;
       font-family: Arial, sans-serif;
-      background: linear-gradient(to bottom, #24FE41, #FDFC47);
+      background: linear-gradient(to bottom, #24fe41, #fdfc47);
       text-align: center;
       overflow: hidden;
     }
@@ -25,7 +25,7 @@
     }
     #game-screen {
       height: 450px;
-      background: url('https://i.imgur.com/h7pF3x1.jpeg') no-repeat center;
+      background: url('https://i.ibb.co/Y0L9v9f/bg.jpg') no-repeat center;
       background-size: cover;
       position: relative;
       overflow: hidden;
@@ -38,8 +38,12 @@
       position: absolute;
       width: 80px;
       height: 80px;
+      max-width: 20vw;
+      max-height: 20vw;
       display: none;
       cursor: pointer;
+      user-select: none;
+      -webkit-user-drag: none;
     }
     #start-btn, #restart-btn {
       width: 150px;
@@ -89,6 +93,8 @@
       <button id="restart-btn">Дахин эхлэх</button>
     </div>
   </div>
+
+  <!-- Fruit slice sound -->
   <audio id="slice-sound" src="https://cdn.pixabay.com/download/audio/2023/03/13/audio_b4c0d2e709.mp3?filename=fruit-slice-14510.mp3"></audio>
 
   <script>
@@ -97,10 +103,12 @@
       let lives = 3;
       let isPlaying = false;
       let fruitInterval;
-      const fruitImage = 'https://i.imgur.com/KqADw63.png'; // Бүхэл тарвас
-      const slicedImage = 'https://i.imgur.com/3Hz7MvL.png'; // Хэрчигдсэн тарвас
 
-      // Telegram WebApp тохируулга
+      // ✅ Тарвасны зурагнууд
+      const fruitImage = 'https://i.ibb.co/41JLWNg/watermelon.png';
+      const slicedImage = 'https://i.ibb.co/3rRC1N7/watermelon-sliced.png';
+
+      // ✅ Telegram WebApp тохиргоо
       if (window.Telegram.WebApp) {
         window.Telegram.WebApp.ready();
         const user = window.Telegram.WebApp.initDataUnsafe.user;
@@ -168,9 +176,9 @@
             $('#slice-sound')[0].currentTime = 0;
             $('#slice-sound')[0].play();
             fruit.attr('src', slicedImage);
-            fruit.effect("explode", { pieces: 9 }, 500);
+            fruit.effect("explode", { pieces: 9 }, 400);
             clearInterval(moveFruit);
-            setTimeout(() => fruit.remove(), 500);
+            setTimeout(() => fruit.remove(), 400);
           });
         }, 1500);
       }
