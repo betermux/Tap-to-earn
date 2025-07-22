@@ -2,190 +2,140 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Fruit Ninja Clone</title>
+  <title>Fruit Slice Clone</title>
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body, html { width:100%; height:100%; overflow:hidden; background:#111; }
-    #canvas { display:block; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; background: #000; }
     #hud {
-      position:absolute; top:10px; left:10px; color:#fff;
-      font-family:sans-serif; font-size:20px; text-shadow:1px 1px 2px #000;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: #fff;
+      font-family: sans-serif;
+      font-size: 20px;
+      z-index: 1;
+    }
+    canvas {
+      display: block;
     }
   </style>
 </head>
 <body>
-  <canvas id="canvas"></canvas>
-  <div id="hud">Score: 0 &nbsp; Lives: 3 &nbsp; Combo: 0</div>
-
+  <div id="hud">Score: 0 | Lives: 3</div>
+  <canvas id="gameCanvas"></canvas>
   <script>
-  /* ===== Base64 Assets ===== */
-  const base = {
-    bg: 'data:image/jpeg;base64,/*PLACEHOLDER_BG*/',
-    apple: 'data:image/png;base64,/*PLACEHOLDER_APPLE*/',
-    banana: 'data:image/png;base64,/*PLACEHOLDER_BANANA*/',
-    orange: 'data:image/png;base64,/*PLACEHOLDER_ORANGE*/',
-    watermelon: 'data:image/png;base64,/*PLACEHOLDER_WATERMELON*/',
-    grape: 'data:image/png;base64,/*PLACEHOLDER_GRAPE*/',
-    bomb: 'data:image/png;base64,/*PLACEHOLDER_BOMB*/',
-    sliceSnd: 'data:audio/mp3;base64,/*PLACEHOLDER_SLICE*/',
-    bombSnd: 'data:audio/mp3;base64,/*PLACEHOLDER_BOMB*/'
-  };
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-  /* ===== Preload ===== */
-  const images = {};
-  const sounds = {};
+    const W = canvas.width;
+    const H = canvas.height;
 
-  for (let key in base) {
-    if (base[key].startsWith('data:image/')) {
-      let img = new Image();
-      img.src = base[key];
-      images[key] = img;
-    } else {
-      let audio = new Audio(base[key]);
-      sounds[key] = audio;
+    let score = 0;
+    let lives = 3;
+
+    const fruits = [];
+    const fruitImages = [];
+
+    // --- Load fruit image (Base64 PNG of a watermelon slice) ---
+    const fruitImg = new Image();
+    fruitImg.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABWKLW/AAAAvUlEQVRoge3YwQnCQBCF4XNFDowFbdEpJkPqRzZsJ5kLk6Bd3BcW3aNcdmTfb3vABERERERERERERERERERkZcSREKKoAQMkcM8QkT4Ad8zmIfSBl9k4UlGAHa1/hVi9BLO7OAwqsYgQP07cBPuWDIOQzZdu8ZrfyHqL0AZc4Ag+AiugZLgA54z3A7eQf5H0hz8g7czDPmIdrZAv3AYbznE84jxkMIpH3zRERERERERERERERERERkZMdoA07Fxk8k9u7wAAAABJRU5ErkJggg==";
+    fruitImages.push(fruitImg);
+
+    // --- Touch or Mouse coordinates ---
+    const pointer = { x: 0, y: 0, down: false };
+
+    // Handle mouse
+    canvas.addEventListener("mousemove", (e) => {
+      pointer.x = e.clientX;
+      pointer.y = e.clientY;
+    });
+    canvas.addEventListener("mousedown", () => pointer.down = true);
+    canvas.addEventListener("mouseup", () => pointer.down = false);
+
+    // Handle touch
+    canvas.addEventListener("touchmove", (e) => {
+      pointer.x = e.touches[0].clientX;
+      pointer.y = e.touches[0].clientY;
+    });
+    canvas.addEventListener("touchstart", () => pointer.down = true);
+    canvas.addEventListener("touchend", () => pointer.down = false);
+
+    // Fruit class
+    class Fruit {
+      constructor() {
+        this.x = Math.random() * W;
+        this.y = H + 50;
+        this.r = 40;
+        this.vx = (Math.random() - 0.5) * 10;
+        this.vy = -15 - Math.random() * 5;
+        this.gravity = 0.4;
+        this.sliced = false;
+        this.image = fruitImages[Math.floor(Math.random() * fruitImages.length)];
+      }
+
+      update() {
+        this.vy += this.gravity;
+        this.x += this.vx;
+        this.y += this.vy;
+      }
+
+      draw() {
+        ctx.drawImage(this.image, this.x - this.r, this.y - this.r, this.r * 2, this.r * 2);
+      }
+
+      isHit(px, py) {
+        const dx = this.x - px;
+        const dy = this.y - py;
+        return Math.sqrt(dx * dx + dy * dy) < this.r;
+      }
     }
-  }
 
-  /* ===== Canvas Setup ===== */
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
-  let W = canvas.width = innerWidth;
-  let H = canvas.height = innerHeight;
+    // Spawn fruits every second
+    setInterval(() => {
+      fruits.push(new Fruit());
+    }, 1000);
 
-  window.addEventListener('resize', ()=>{
-    W = canvas.width = innerWidth;
-    H = canvas.height = innerHeight;
-  });
+    function update() {
+      for (let i = fruits.length - 1; i >= 0; i--) {
+        const f = fruits[i];
+        f.update();
 
-  /* ===== Game Variables ===== */
-  let score = 0, lives = 3, combo = 0, comboTimer = null;
-  const fruits = [];
-  const pointer = { x:0, y:0, down:false };
-
-  const types = ['apple','banana','orange','watermelon','grape'];
-  const GRAVITY = 0.4;
-
-  /* ===== Utilities ===== */
-  function rnd(min,max){return Math.random()*(max-min)+min;}
-
-  /* ===== Classes ===== */
-  class Fruit {
-    constructor() {
-      this.type = Math.random() < 0.05 ? 'bomb' : types[Math.floor(rnd(0,types.length))];
-      this.img = images[this.type];
-      this.r = rnd(30,50);
-      this.x = rnd(this.r, W-this.r);
-      this.y = H + this.r;
-      this.vx = rnd(-4,4);
-      this.vy = rnd(-15, -10);
-      this.sliced = false;
-      this.rotation = rnd(-0.1,0.1);
-      this.angle = 0;
-      this.color = this.type=='bomb'?'red':'transparent';
-    }
-
-    update(){
-      this.vy += GRAVITY;
-      this.x += this.vx;
-      this.y += this.vy;
-      this.angle += this.rotation;
-    }
-    draw(){
-      ctx.save();
-      ctx.translate(this.x,this.y);
-      ctx.rotate(this.angle);
-      ctx.drawImage(this.img, -this.r, -this.r, this.r*2, this.r*2);
-      ctx.restore();
-    }
-    isOffscreen(){
-      return this.y > H + this.r;
-    }
-  }
-
-  /* ===== Spawn Loop ===== */
-  function spawn(){
-    fruits.push(new Fruit());
-  }
-  setInterval(spawn, 800);
-
-  /* ===== Input ===== */
-  canvas.addEventListener('mousedown', ()=>pointer.down=true);
-  canvas.addEventListener('mouseup', ()=>pointer.down=false);
-  canvas.addEventListener('mousemove', e=>{
-    const rect = canvas.getBoundingClientRect();
-    pointer.x = e.clientX - rect.left;
-    pointer.y = e.clientY - rect.top;
-  });
-  canvas.addEventListener('touchstart', e=>{pointer.down=true;});
-  canvas.addEventListener('touchend', e=>{pointer.down=false;});
-  canvas.addEventListener('touchmove', e=>{
-    const rect = canvas.getBoundingClientRect();
-    pointer.x = e.touches[0].clientX - rect.left;
-    pointer.y = e.touches[0].clientY - rect.top;
-  });
-
-  /* ===== Game Loop ===== */
-  function update(){
-    for (let i = fruits.length-1; i>=0; i--){
-      let f = fruits[i];
-      f.update();
-
-      if (f.isOffscreen()){
-        fruits.splice(i,1);
-        if (!f.sliced && f.type!='bomb'){
-          lives--;
-          combo = 0;
-          if (lives<=0){
-            alert(`Game Over! Final: ${score}`);
-            location.reload();
+        if (f.y > H + 50) {
+          fruits.splice(i, 1);
+          if (!f.sliced) {
+            lives--;
+            if (lives <= 0) {
+              alert("Game Over! Final Score: " + score);
+              location.reload();
+            }
           }
         }
-      } else if (pointer.down && !f.sliced) {
-        let dx = f.x - pointer.x;
-        let dy = f.y - pointer.y;
-        if (Math.hypot(dx,dy) < f.r) {
+
+        if (pointer.down && !f.sliced && f.isHit(pointer.x, pointer.y)) {
           f.sliced = true;
-          if (f.type=='bomb'){
-            sounds.bombSnd.currentTime = 0;
-            sounds.bombSnd.play();
-            lives = 0;
-            alert(`Bomb hit! Final: ${score}`);
-            location.reload();
-          } else {
-            sounds.sliceSnd.currentTime = 0;
-            sounds.sliceSnd.play();
-            fruits.splice(i,1);
-            score += 10;
-            combo++;
-            clearTimeout(comboTimer);
-            comboTimer = setTimeout(()=>combo=0,1500);
-          }
+          fruits.splice(i, 1);
+          score += 10;
         }
       }
     }
-  }
 
-  function draw(){
-    ctx.drawImage(images.bg, 0,0, W, H);
-    fruits.forEach(f=>f.draw());
-    ctx.fillStyle = '#fff';
-    ctx.font = '18px sans-serif';
-    if (combo>1){
-      ctx.fillStyle = 'yellow';
-      ctx.fillText(`Combo ×${combo}`, 10, H -30);
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      for (let f of fruits) {
+        f.draw();
+      }
+      document.getElementById("hud").textContent = `Score: ${score} | Lives: ${lives}`;
     }
-  }
 
-  function loop(){
-    update();
-    draw();
-    document.getElementById('hud').innerHTML = `
-      Score: ${score} &nbsp; Lives: ${lives} &nbsp; Combo: ${combo>1?combo:''}
-    `;
-    requestAnimationFrame(loop);
-  }
-  loop();
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
 
+    loop();
   </script>
 </body>
 </html>
