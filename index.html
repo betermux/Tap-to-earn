@@ -6,7 +6,6 @@
   <title>Fruit Slice тоглоом</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
   <style>
     body {
       margin: 0;
@@ -25,7 +24,7 @@
     }
     #game-screen {
       height: 450px;
-      background: url('https://i.ibb.co/Y0L9v9f/bg.jpg') no-repeat center;
+      background: #fff;
       background-size: cover;
       position: relative;
       overflow: hidden;
@@ -36,14 +35,10 @@
     }
     .fruit {
       position: absolute;
-      width: 80px;
-      height: 80px;
-      max-width: 20vw;
-      max-height: 20vw;
+      font-size: 50px;
       display: none;
       cursor: pointer;
       user-select: none;
-      -webkit-user-drag: none;
     }
     #start-btn, #restart-btn {
       width: 150px;
@@ -94,7 +89,6 @@
     </div>
   </div>
 
-  <!-- Fruit slice sound -->
   <audio id="slice-sound" src="https://cdn.pixabay.com/download/audio/2023/03/13/audio_b4c0d2e709.mp3?filename=fruit-slice-14510.mp3"></audio>
 
   <script>
@@ -104,11 +98,6 @@
       let isPlaying = false;
       let fruitInterval;
 
-      // ✅ Тарвасны зурагнууд
-      const fruitImage = 'https://i.ibb.co/41JLWNg/watermelon.png';
-      const slicedImage = 'https://i.ibb.co/3rRC1N7/watermelon-sliced.png';
-
-      // ✅ Telegram WebApp тохиргоо
       if (window.Telegram.WebApp) {
         window.Telegram.WebApp.ready();
         const user = window.Telegram.WebApp.initDataUnsafe.user;
@@ -143,12 +132,12 @@
 
       function spawnFruits() {
         fruitInterval = setInterval(function () {
-          const fruit = $('<img>', {
+          const fruit = $('<div>', {
             class: 'fruit',
-            src: fruitImage,
+            text: '🍉',
             css: {
-              top: -80,
-              left: Math.random() * ($('#fruit-container').width() - 80)
+              top: -60,
+              left: Math.random() * ($('#fruit-container').width() - 50)
             }
           });
 
@@ -175,10 +164,9 @@
             $('#score-value').text(score);
             $('#slice-sound')[0].currentTime = 0;
             $('#slice-sound')[0].play();
-            fruit.attr('src', slicedImage);
-            fruit.effect("explode", { pieces: 9 }, 400);
+            fruit.text('💥');
             clearInterval(moveFruit);
-            setTimeout(() => fruit.remove(), 400);
+            setTimeout(() => fruit.remove(), 300);
           });
         }, 1500);
       }
