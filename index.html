@@ -25,7 +25,7 @@
     }
     #game-screen {
       height: 450px;
-      background: url('background.jpg') no-repeat center;
+      background: url('https://i.imgur.com/h7pF3x1.jpeg') no-repeat center;
       background-size: cover;
       position: relative;
       overflow: hidden;
@@ -89,14 +89,16 @@
       <button id="restart-btn">Дахин эхлэх</button>
     </div>
   </div>
-  <audio id="slice-sound" src="slice.mp3"></audio>
+  <audio id="slice-sound" src="https://cdn.pixabay.com/download/audio/2023/03/13/audio_b4c0d2e709.mp3?filename=fruit-slice-14510.mp3"></audio>
+
   <script>
     $(document).ready(function () {
       let score = 0;
       let lives = 3;
       let isPlaying = false;
       let fruitInterval;
-      const fruits = ['banana.png', 'apple.png', 'orange.png', 'watermelon.png'];
+      const fruitImage = 'https://i.imgur.com/KqADw63.png'; // Бүхэл тарвас
+      const slicedImage = 'https://i.imgur.com/3Hz7MvL.png'; // Хэрчигдсэн тарвас
 
       // Telegram WebApp тохируулга
       if (window.Telegram.WebApp) {
@@ -133,10 +135,9 @@
 
       function spawnFruits() {
         fruitInterval = setInterval(function () {
-          const fruitNum = Math.floor(Math.random() * fruits.length);
           const fruit = $('<img>', {
             class: 'fruit',
-            src: fruits[fruitNum],
+            src: fruitImage,
             css: {
               top: -80,
               left: Math.random() * ($('#fruit-container').width() - 80)
@@ -166,6 +167,7 @@
             $('#score-value').text(score);
             $('#slice-sound')[0].currentTime = 0;
             $('#slice-sound')[0].play();
+            fruit.attr('src', slicedImage);
             fruit.effect("explode", { pieces: 9 }, 500);
             clearInterval(moveFruit);
             setTimeout(() => fruit.remove(), 500);
