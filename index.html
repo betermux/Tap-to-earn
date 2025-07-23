@@ -1,70 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Fruit Slice Clone</title>
+  <meta charset="UTF-8">
+  <title>Fruit Slice Web</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <style>
-    html, body { margin:0; padding:0; overflow:hidden; background: #111; }
-    canvas { display:block; width:100vw; height:100vh; }
-    #score { position:absolute; top:20px; left:50%; transform:translateX(-50%);
-      font-size:2em;color:#fff;text-shadow:0 0 8px #0f0; z-index:10; }
+    body {
+      margin: 0;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #game-container {
+      position: relative;
+      width: 360px;
+      height: 640px;
+      overflow: hidden;
+    }
+    #background {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+    #gameCanvas {
+      position: absolute;
+      z-index: 1;
+    }
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-size: 20px;
+      z-index: 2;
+    }
+    #startButton {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      padding: 10px 20px;
+      font-size: 18px;
+    }
   </style>
 </head>
 <body>
-  <div id="score">Score: 0</div>
-  <canvas id="c"></canvas>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script>window.Telegram.WebApp.expand();</script>
+  <div id="game-container">
+    <!-- Интернэтээс шууд ачаалж буй фон -->
+    <img id="background" src="https://i.imgur.com/vgD7eWT.jpg" />
+    <canvas id="gameCanvas" width="360" height="640"></canvas>
+    <div id="score">Score: 0</div>
+    <button id="startButton">Start</button>
+  </div>
+
   <script>
-    const canvas = document.getElementById('c'), ctx = canvas.getContext('2d');
-    canvas.width = innerWidth; canvas.height = innerHeight;
-    const gravity = 0.4, fruits = [], parts = [];
-    let score = 0;
-    const fruitImages = [
-      'https://i.imgur.com/GRAPEFRUIT.png', 
-      'https://i.imgur.com/ORANGESLICE.png',
-      'https://i.imgur.com/WATERMELON.png',
-      'https://i.imgur.com/PEACHSLICE.png'
-    ];
-    function rndImg() { return fruitImages[Math.floor(Math.random()*fruitImages.length)]; }
-    class Fruit {
-      constructor(){ this.x = Math.random()*canvas.width; this.y = canvas.height+50;
-        this.vx=(Math.random()-0.5)*8; this.vy=-Math.random()*15-10;
-        this.img=new Image(); this.img.src=rndImg(); this.r=40; this.sliced=false;
-      }
-      upd(){ this.vy+=gravity; this.x+=this.vx; this.y+=this.vy; }
-      draw(){ ctx.drawImage(this.img,this.x-this.r,this.y-this.r,80,80); }
-    }
-    class Part {
-      constructor(img,x,y,vx){ this.img=img; this.x=x; this.y=y; this.vx=vx; this.vy=-5;
-        this.a=0;
-      }
-      upd(){ this.vy+=gravity; this.x+=this.vx; this.y+=this.vy; this.a+=0.05; }
-      draw(){
-        ctx.save(); ctx.translate(this.x,this.y); ctx.rotate(this.a);
-        ctx.drawImage(this.img,-40,-40,40,40); ctx.restore();
-      }
-    }
-    function spawn(){ fruits.push(new Fruit()); }
-    function slice(f){ f.sliced = true; [ -4, 4 ].forEach(vx => parts.push(new Part(f.img, f.x, f.y, vx))); score++; document.getElementById('score').textContent = 'Score: '+score; }
-    function detect(x,y){
-      fruits.filter(f=>!f.sliced).forEach(f=>{
-        if(Math.hypot(f.x-x,f.y-y)<f.r) slice(f);
-      });
-    }
-    let last = 0;
-    function loop(ts){
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      if(ts - last > 700){spawn(); last = ts;}
-      fruits.forEach(f => { f.upd(); f.draw(); });
-      parts.forEach(p => { p.upd(); p.draw(); });
-      requestAnimationFrame(loop);
-    }
-    canvas.addEventListener('touchstart',()=>{}); 
-    canvas.addEventListener('touchmove',e=>{ let t = e.touches[0]; detect(t.clientX,t.clientY); });
-    canvas.addEventListener('touchend',()=>{});
-    requestAnimationFrame(loop);
+    document.getElementById("startButton").addEventListener("click", () => {
+      alert("Game Start — implement slicing logic here!");
+    });
   </script>
 </body>
 </html>
