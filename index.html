@@ -1,207 +1,70 @@
 <!DOCTYPE html>
-<html lang="mn">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fruit Slice тоглоом</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Fruit Slice Clone</title>
   <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(to bottom, #24fe41, #fdfc47);
-      text-align: center;
-      overflow: hidden;
-    }
-    #container {
-      margin: 0 auto;
-      max-width: 800px;
-      height: 600px;
-      position: relative;
-      box-shadow: -4px 4px 35px 2px green;
-    }
-    #game-screen {
-      height: 450px;
-      background: #fff;
-      background-size: cover;
-      position: relative;
-      overflow: hidden;
-    }
-    #fruit-container {
-      position: relative;
-      height: 100%;
-    }
-    .fruit {
-      position: absolute;
-      font-size: 50px;
-      display: none;
-      cursor: pointer;
-      user-select: none;
-    }
-    #start-btn, #restart-btn {
-      width: 150px;
-      height: 40px;
-      font-size: 20px;
-      background: white;
-      color: red;
-      border: none;
-      border-radius: 3px;
-      box-shadow: -2px 2px 14px 2px red;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    #game-over {
-      position: absolute;
-      width: 300px;
-      height: 200px;
-      background: rgba(0, 0, 0, 0.7);
-      color: white;
-      top: 200px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 10px;
-      font-size: 30px;
-      display: none;
-      z-index: 10;
-    }
-    #score, #lives {
-      font-size: 24px;
-      color: white;
-      text-shadow: 1px 1px 2px black;
-    }
+    html, body { margin:0; padding:0; overflow:hidden; background: #111; }
+    canvas { display:block; width:100vw; height:100vh; }
+    #score { position:absolute; top:20px; left:50%; transform:translateX(-50%);
+      font-size:2em;color:#fff;text-shadow:0 0 8px #0f0; z-index:10; }
   </style>
 </head>
 <body>
-  <div id="container">
-    <div id="instructions">Жимс хэрчээрэй!</div>
-    <div id="score">Оноо: <span id="score-value">0</span></div>
-    <div id="lives">Амь: <span id="lives-value">3</span></div>
-    <div id="game-screen">
-      <div id="fruit-container"></div>
-    </div>
-    <button id="start-btn">Эхлэх</button>
-    <div id="game-over">
-      <div>Тоглоом дууслаа!</div>
-      <div>Таны оноо: <span id="final-score"></span></div>
-      <button id="restart-btn">Дахин эхлэх</button>
-    </div>
-  </div>
-
-  <audio id="slice-sound" src="https://cdn.pixabay.com/download/audio/2023/03/13/audio_b4c0d2e709.mp3?filename=fruit-slice-14510.mp3"></audio>
-
+  <div id="score">Score: 0</div>
+  <canvas id="c"></canvas>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>window.Telegram.WebApp.expand();</script>
   <script>
-    $(document).ready(function () {
-      let score = 0;
-      let lives = 3;
-      let isPlaying = false;
-      let fruitInterval;
-
-      if (window.Telegram.WebApp) {
-        window.Telegram.WebApp.ready();
-        const user = window.Telegram.WebApp.initDataUnsafe.user;
-        if (user) {
-          $('#instructions').text(`Сайн байна уу, ${user.first_name}! Жимс хэрчээрэй!`);
-        }
+    const canvas = document.getElementById('c'), ctx = canvas.getContext('2d');
+    canvas.width = innerWidth; canvas.height = innerHeight;
+    const gravity = 0.4, fruits = [], parts = [];
+    let score = 0;
+    const fruitImages = [
+      'https://i.imgur.com/GRAPEFRUIT.png', 
+      'https://i.imgur.com/ORANGESLICE.png',
+      'https://i.imgur.com/WATERMELON.png',
+      'https://i.imgur.com/PEACHSLICE.png'
+    ];
+    function rndImg() { return fruitImages[Math.floor(Math.random()*fruitImages.length)]; }
+    class Fruit {
+      constructor(){ this.x = Math.random()*canvas.width; this.y = canvas.height+50;
+        this.vx=(Math.random()-0.5)*8; this.vy=-Math.random()*15-10;
+        this.img=new Image(); this.img.src=rndImg(); this.r=40; this.sliced=false;
       }
-
-      $('#start-btn').on('click', function () {
-        if (!isPlaying) {
-          score = 0;
-          lives = 3;
-          isPlaying = true;
-          $('#score-value').text(score);
-          $('#lives-value').text(lives);
-          $('#game-over').hide();
-          $('#start-btn').text('Дахин эхлүүлэх');
-          spawnFruits();
-
-          if (window.Telegram.WebApp) {
-            window.Telegram.WebApp.MainButton
-              .setText('Оноогоо хуваалцах')
-              .show()
-              .onClick(() => {
-                window.Telegram.WebApp.sendData(JSON.stringify({ score: score }));
-              });
-          }
-        } else {
-          resetGame();
-        }
+      upd(){ this.vy+=gravity; this.x+=this.vx; this.y+=this.vy; }
+      draw(){ ctx.drawImage(this.img,this.x-this.r,this.y-this.r,80,80); }
+    }
+    class Part {
+      constructor(img,x,y,vx){ this.img=img; this.x=x; this.y=y; this.vx=vx; this.vy=-5;
+        this.a=0;
+      }
+      upd(){ this.vy+=gravity; this.x+=this.vx; this.y+=this.vy; this.a+=0.05; }
+      draw(){
+        ctx.save(); ctx.translate(this.x,this.y); ctx.rotate(this.a);
+        ctx.drawImage(this.img,-40,-40,40,40); ctx.restore();
+      }
+    }
+    function spawn(){ fruits.push(new Fruit()); }
+    function slice(f){ f.sliced = true; [ -4, 4 ].forEach(vx => parts.push(new Part(f.img, f.x, f.y, vx))); score++; document.getElementById('score').textContent = 'Score: '+score; }
+    function detect(x,y){
+      fruits.filter(f=>!f.sliced).forEach(f=>{
+        if(Math.hypot(f.x-x,f.y-y)<f.r) slice(f);
       });
-
-      function spawnFruits() {
-        fruitInterval = setInterval(function () {
-          const fruit = $('<div>', {
-            class: 'fruit',
-            text: '🍉',
-            css: {
-              top: -60,
-              left: Math.random() * ($('#fruit-container').width() - 50)
-            }
-          });
-
-          $('#fruit-container').append(fruit);
-          fruit.show();
-
-          let fallSpeed = Math.floor(Math.random() * 5) + 2;
-          const moveFruit = setInterval(function () {
-            fruit.css('top', fruit.position().top + fallSpeed);
-            if (fruit.position().top > $('#fruit-container').height()) {
-              fruit.remove();
-              lives--;
-              $('#lives-value').text(lives);
-              if (lives <= 0) {
-                endGame();
-              }
-              clearInterval(moveFruit);
-            }
-          }, 20);
-
-          fruit.on('click touchstart', function (e) {
-            e.preventDefault();
-            score++;
-            $('#score-value').text(score);
-            $('#slice-sound')[0].currentTime = 0;
-            $('#slice-sound')[0].play();
-            fruit.text('💥');
-            clearInterval(moveFruit);
-            setTimeout(() => fruit.remove(), 300);
-          });
-        }, 1500);
-      }
-
-      function endGame() {
-        isPlaying = false;
-        clearInterval(fruitInterval);
-        $('#game-over').show();
-        $('#final-score').text(score);
-        $('#start-btn').text('Эхлэх');
-        $('.fruit').remove();
-        if (window.Telegram.WebApp) {
-          window.Telegram.WebApp.MainButton.hide();
-        }
-      }
-
-      function resetGame() {
-        isPlaying = false;
-        clearInterval(fruitInterval);
-        score = 0;
-        lives = 3;
-        $('#score-value').text(score);
-        $('#lives-value').text(lives);
-        $('#game-over').hide();
-        $('.fruit').remove();
-        if (window.Telegram.WebApp) {
-          window.Telegram.WebApp.MainButton.hide();
-        }
-      }
-
-      $('#restart-btn').on('click', function () {
-        resetGame();
-        $('#start-btn').trigger('click');
-      });
-    });
+    }
+    let last = 0;
+    function loop(ts){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      if(ts - last > 700){spawn(); last = ts;}
+      fruits.forEach(f => { f.upd(); f.draw(); });
+      parts.forEach(p => { p.upd(); p.draw(); });
+      requestAnimationFrame(loop);
+    }
+    canvas.addEventListener('touchstart',()=>{}); 
+    canvas.addEventListener('touchmove',e=>{ let t = e.touches[0]; detect(t.clientX,t.clientY); });
+    canvas.addEventListener('touchend',()=>{});
+    requestAnimationFrame(loop);
   </script>
 </body>
 </html>
