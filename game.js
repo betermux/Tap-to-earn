@@ -1,0 +1,112 @@
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+const fruitImg = new Image();
+fruitImg.src = "assets/fruit.png";
+
+const fruitHalf1 = new Image();
+fruitHalf1.src = "assets/fruit_half1.png";
+
+const fruitHalf2 = new Image();
+fruitHalf2.src = "assets/fruit_half2.png";
+
+const sliceSound = new Audio("assets/slice.mp3");
+
+let fruits = [];
+let slicedFruits = [];
+let score = 0;
+
+class Fruit {
+  constructor() {
+    this.x = Math.random() * 300 + 30;
+    this.y = 640;
+    this.radius = 40;
+    this.speedY = - (6 + Math.random() * 2);
+    this.speedX = (Math.random() - 0.5) * 4;
+    this.gravity = 0.25;
+    this.sliced = false;
+  }
+
+  update() {
+    this.y += this.speedY;
+    this.x += this.speedX;
+    this.speedY += this.gravity;
+  }
+
+  draw() {
+    if (!this.sliced) {
+      ctx.drawImage(fruitImg, this.x - 40, this.y - 40, 80, 80);
+    }
+  }
+
+  checkSlice(x, y) {
+    const dx = this.x - x;
+    const dy = this.y - y;
+    return Math.sqrt(dx * dx + dy * dy) < this.radius;
+  }
+}
+
+function spawnFruit() {
+  if (Math.random() < 0.04) {
+    fruits.push(new Fruit());
+  }
+}
+
+function update() {
+  for (let fruit of fruits) {
+    fruit.update();
+  }
+  fruits = fruits.filter(fruit => fruit.y < 700 && !fruit.sliced);
+
+  for (let sf of slicedFruits) {
+    sf.y += 3;
+    sf.rotation += 0.1;
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let fruit of fruits) {
+    fruit.draw();
+  }
+
+  for (let sf of slicedFruits) {
+    ctx.save();
+    ctx.translate(sf.x, sf.y);
+    ctx.rotate(sf.rotation);
+    ctx.drawImage(sf.img, -40, -40, 80, 80);
+    ctx.restore();
+  }
+
+  ctx.fillStyle = "#fff";
+  ctx.font = "24px Arial";
+  ctx.fillText(`Score: ${score}`, 10, 30);
+}
+
+canvas.addEventListener("touchmove", function (e) {
+  const touch = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
+
+  for (let fruit of fruits) {
+    if (!fruit.sliced && fruit.checkSlice(x, y)) {
+      fruit.sliced = true;
+      score++;
+      sliceSound.currentTime = 0;
+      sliceSound.play();
+
+      slicedFruits.push({ x: fruit.x - 20, y: fruit.y, img: fruitHalf1, rotation: 0 });
+      slicedFruits.push({ x: fruit.x + 20, y: fruit.y, img: fruitHalf2, rotation: 0 });
+    }
+  }
+});
+
+function gameLoop() {
+  spawnFruit();
+  update();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
