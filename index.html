@@ -2,66 +2,140 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Fruit Slice Web</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Fruit Slice Portrait</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
+      height: 100%;
       background: #000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    #game-container {
-      position: relative;
-      width: 360px;
-      height: 640px;
       overflow: hidden;
     }
-    #background {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      z-index: 0;
-    }
-    #gameCanvas {
-      position: absolute;
-      z-index: 1;
-    }
-    #score {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      color: white;
-      font-size: 20px;
-      z-index: 2;
-    }
-    #startButton {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 2;
-      padding: 10px 20px;
-      font-size: 18px;
+    canvas {
+      display: block;
+      margin: 0 auto;
+      background: url("assets/background.jpg") no-repeat center center;
+      background-size: cover;
     }
   </style>
 </head>
 <body>
-  <div id="game-container">
-    <!-- Интернэтээс шууд ачаалж буй фон -->
-    <img id="background" src="https://i.ibb.co/pB4jD0XG/2fLqljZ.gif" />
-    <canvas id="gameCanvas" width="360" height="640"></canvas>
-    <div id="score">Score: 0</div>
-    <button id="startButton">Start</button>
-  </div>
+  <canvas id="gameCanvas" width="360" height="640"></canvas>
 
   <script>
-    document.getElementById("startButton").addEventListener("click", () => {
-      alert("Game Start — implement slicing logic here!");
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const fruitImg = new Image();
+    fruitImg.src = "assets/fruit.png";
+
+    const fruitHalf1 = new Image();
+    fruitHalf1.src = "assets/fruit_half1.png";
+
+    const fruitHalf2 = new Image();
+    fruitHalf2.src = "assets/fruit_half2.png";
+
+    const sliceSound = new Audio("assets/slice.mp3");
+
+    let fruits = [];
+    let slicedFruits = [];
+    let score = 0;
+
+    class Fruit {
+      constructor() {
+        this.x = Math.random() * 300 + 30;
+        this.y = 640;
+        this.radius = 40;
+        this.speedY = - (6 + Math.random() * 2);
+        this.speedX = (Math.random() - 0.5) * 4;
+        this.gravity = 0.25;
+        this.sliced = false;
+      }
+
+      update() {
+        this.y += this.speedY;
+        this.x += this.speedX;
+        this.speedY += this.gravity;
+      }
+
+      draw() {
+        if (!this.sliced) {
+          ctx.drawImage(fruitImg, this.x - 40, this.y - 40, 80, 80);
+        }
+      }
+
+      checkSlice(x, y) {
+        const dx = this.x - x;
+        const dy = this.y - y;
+        return Math.sqrt(dx * dx + dy * dy) < this.radius;
+      }
+    }
+
+    function spawnFruit() {
+      if (Math.random() < 0.04) {
+        fruits.push(new Fruit());
+      }
+    }
+
+    function update() {
+      for (let fruit of fruits) {
+        fruit.update();
+      }
+      fruits = fruits.filter(fruit => fruit.y < 700 && !fruit.sliced);
+
+      for (let sf of slicedFruits) {
+        sf.y += 3;
+        sf.rotation += 0.1;
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let fruit of fruits) {
+        fruit.draw();
+      }
+
+      for (let sf of slicedFruits) {
+        ctx.save();
+        ctx.translate(sf.x, sf.y);
+        ctx.rotate(sf.rotation);
+        ctx.drawImage(sf.img, -40, -40, 80, 80);
+        ctx.restore();
+      }
+
+      ctx.fillStyle = "#fff";
+      ctx.font = "24px Arial";
+      ctx.fillText(`Score: ${score}`, 10, 30);
+    }
+
+    canvas.addEventListener("touchmove", function (e) {
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+
+      for (let fruit of fruits) {
+        if (!fruit.sliced && fruit.checkSlice(x, y)) {
+          fruit.sliced = true;
+          score++;
+          sliceSound.currentTime = 0;
+          sliceSound.play();
+
+          slicedFruits.push({ x: fruit.x - 20, y: fruit.y, img: fruitHalf1, rotation: 0 });
+          slicedFruits.push({ x: fruit.x + 20, y: fruit.y, img: fruitHalf2, rotation: 0 });
+        }
+      }
     });
+
+    function gameLoop() {
+      spawnFruit();
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
   </script>
 </body>
 </html>
